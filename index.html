@@ -1934,11 +1934,12 @@
         sub.textContent = "Esto puede tardar unos segundos";
 
         try {
-          // Lanzar las 3 peticiones en paralelo para reducir tiempo de carga
+          // redirect:"follow" es obligatorio — Apps Script responde con 302 antes del JSON
+          const _go = url => fetch(url, { redirect: "follow" });
           const [cfgResp, audResp, detResp] = await Promise.all([
-            fetch(CFG.sheets_url + "?action=get_config"),
-            fetch(CFG.sheets_url + "?action=get_auditorias"),
-            fetch(CFG.sheets_url + "?action=get_detalle"),
+            _go(CFG.sheets_url + "?action=get_config"),
+            _go(CFG.sheets_url + "?action=get_auditorias"),
+            _go(CFG.sheets_url + "?action=get_detalle"),
           ]);
 
           msg.textContent = "Procesando respuesta...";
@@ -2148,7 +2149,7 @@
         badge.innerHTML =
           '<span class="badge badge-observada">Probando...</span>';
         try {
-          const resp = await fetch(CFG.sheets_url + "?action=get_config");
+          const resp = await fetch(CFG.sheets_url + "?action=get_config", { redirect: "follow" });
           if (!resp.ok) throw new Error("HTTP " + resp.status);
           const data = await resp.json();
           if (data.status === "ok")
