@@ -8,191 +8,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"
-    >
-      // ====== CONFIG PAGE ======
-      function populateSelects(){
-        // Agente
-        const ag = document.getElementById('f-agente');
-        if(ag){ ag.innerHTML='<option value="">— Seleccionar —</option>'+CFG.agentes.map(a=>`<option>${a}</option>`).join(''); }
-        // Auditor
-        const aud = document.getElementById('f-auditor');
-        if(aud){ aud.innerHTML='<option value="">— Seleccionar —</option>'+CFG.auditores.map(a=>`<option>${a}</option>`).join(''); }
-        // filter-agente in registros
-        const fa = document.getElementById('filter-agente');
-        if(fa){ fa.innerHTML='<option value="">Todos los agentes</option>'+CFG.agentes.map(a=>`<option>${a}</option>`).join(''); }
-      }
-
-      function renderConfigPage(){
-        document.getElementById('cfg-sheets-url').value = CFG.sheets_url || '';
-        document.getElementById('cfg-horas-base').value = CFG.horas_base;
-        document.getElementById('cfg-tickets-base').value = CFG.tickets_base;
-        document.getElementById('cfg-muestras').value = CFG.muestras_semana;
-        document.getElementById('cfg-w-inter').value = CFG.w_inter;
-        document.getElementById('cfg-w-puntual').value = CFG.w_puntual;
-        document.getElementById('cfg-w-present').value = CFG.w_present;
-        document.getElementById('cfg-u-excelente').value = CFG.u_excelente;
-        document.getElementById('cfg-u-correcta').value = CFG.u_correcta;
-        document.getElementById('cfg-obj-dias').value = CFG.obj_puntual;
-        renderListaAgentes();
-        renderListaAuditores();
-        updateSheetsUI();
-        checkPesos();
-      }
-
-      function renderListaAgentes(){
-        const cont = document.getElementById('lista-agentes');
-        if(!cont) return;
-        if(!CFG.agentes.length){ cont.innerHTML='<p style="color:var(--hint);font-size:12px">Sin agentes agregados.</p>'; return; }
-        cont.innerHTML = CFG.agentes.map((a,i)=>`
-          <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
-            <div class="avatar" style="width:28px;height:28px;font-size:11px">${a.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase()}</div>
-            <div style="flex:1;font-size:13px">${a}</div>
-            <button class="btn sm danger" onclick="removeAgente(${i})" style="padding:3px 8px">✕</button>
-          </div>`).join('');
-      }
-
-      function renderListaAuditores(){
-        const cont = document.getElementById('lista-auditores');
-        if(!cont) return;
-        if(!CFG.auditores.length){ cont.innerHTML='<p style="color:var(--hint);font-size:12px">Sin auditores agregados.</p>'; return; }
-        cont.innerHTML = CFG.auditores.map((a,i)=>`
-          <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
-            <div style="flex:1;font-size:13px;font-weight:500">${a}</div>
-            <button class="btn sm danger" onclick="removeAuditor(${i})" style="padding:3px 8px">✕</button>
-          </div>`).join('');
-      }
-
-      function addAgente(){
-        const inp = document.getElementById('nuevo-agente');
-        const val = inp.value.trim();
-        if(!val) return;
-        if(CFG.agentes.includes(val)){ alert('Este agente ya existe.'); return; }
-        CFG.agentes.push(val);
-        inp.value='';
-        persistConfig();
-        populateSelects();
-        renderListaAgentes();
-        syncConfigToSheets('agente_agregado', {agente: val});
-      }
-
-      function removeAgente(i){
-        const nombre = CFG.agentes[i];
-        CFG.agentes.splice(i,1);
-        persistConfig();
-        populateSelects();
-        renderListaAgentes();
-        syncConfigToSheets('agente_eliminado', {agente: nombre});
-      }
-
-      function addAuditor(){
-        const inp = document.getElementById('nuevo-auditor');
-        const val = inp.value.trim();
-        if(!val) return;
-        if(CFG.auditores.includes(val)){ alert('Este auditor ya existe.'); return; }
-        CFG.auditores.push(val);
-        inp.value='';
-        persistConfig();
-        populateSelects();
-        renderListaAuditores();
-        syncConfigToSheets('auditor_agregado', {auditor: val});
-      }
-
-      function removeAuditor(i){
-        const nombre = CFG.auditores[i];
-        CFG.auditores.splice(i,1);
-        persistConfig();
-        populateSelects();
-        renderListaAuditores();
-        syncConfigToSheets('auditor_eliminado', {auditor: nombre});
-      }
-
-      function saveConfigSheets(){
-        const url = document.getElementById('cfg-sheets-url').value.trim();
-        if(url && !url.startsWith('https://script.google.com')){
-          alert('URL inválida. Debe ser de script.google.com'); return;
-        }
-        CFG.sheets_url = url;
-        SHEETS_URL = url;
-        persistConfig();
-        updateSheetsUI();
-        const badge = document.getElementById('cfg-sheets-badge');
-        badge.innerHTML = url ? '<span class="badge badge-excelente">✓ URL guardada</span>' : '<span class="badge badge-observada">Sin URL</span>';
-      }
-
-      async function testSheets(){
-        if(!SHEETS_URL){ alert('No hay URL configurada.'); return; }
-        const badge = document.getElementById('cfg-sheets-badge');
-        badge.innerHTML = '<span class="badge badge-observada">Probando...</span>';
-        try{
-          const resp = await fetch(SHEETS_URL + '?action=get_config', {method:'GET'});
-          if(!resp.ok) throw new Error('HTTP ' + resp.status);
-          const data = await resp.json();
-          if(data.status === 'ok'){
-            badge.innerHTML = '<span class="badge badge-excelente">✓ Conexión OK — Sheets responde</span>';
-          } else {
-            badge.innerHTML = '<span class="badge badge-observada">⚠ Sheets respondió con error: '+data.message+'</span>';
-          }
-        } catch(e){
-          badge.innerHTML = '<span class="badge badge-observada">✗ Error: '+e.message+'</span>';
-        }
-      }
-
-      function checkPesos(){
-        const wi=Number(document.getElementById('cfg-w-inter').value)||0;
-        const wp=Number(document.getElementById('cfg-w-puntual').value)||0;
-        const wpr=Number(document.getElementById('cfg-w-present').value)||0;
-        const sum=wi+wp+wpr;
-        const el=document.getElementById('cfg-pesos-check');
-        if(!el) return;
-        if(sum===100){ el.textContent='✓ Los pesos suman 100%. Correcto.'; el.style.color='var(--green)'; }
-        else { el.textContent='⚠ Los pesos suman '+sum+'% (deben sumar 100%).'; el.style.color='var(--red)'; }
-      }
-
-      function saveConfig(){
-        const wi=Number(document.getElementById('cfg-w-inter').value);
-        const wp=Number(document.getElementById('cfg-w-puntual').value);
-        const wpr=Number(document.getElementById('cfg-w-present').value);
-        if(wi+wp+wpr!==100){ alert('Los pesos de productividad deben sumar exactamente 100%.'); return; }
-
-        const anterior = {
-          horas_base: CFG.horas_base, tickets_base: CFG.tickets_base,
-          muestras_semana: CFG.muestras_semana, w_inter: CFG.w_inter,
-          w_puntual: CFG.w_puntual, w_present: CFG.w_present,
-          u_excelente: CFG.u_excelente, u_correcta: CFG.u_correcta, obj_puntual: CFG.obj_puntual
-        };
-
-        saveConfigSheets();
-        CFG.horas_base = Number(document.getElementById('cfg-horas-base').value) || 44;
-        CFG.tickets_base = Number(document.getElementById('cfg-tickets-base').value) || 660;
-        CFG.muestras_semana = Number(document.getElementById('cfg-muestras').value) || 4;
-        CFG.w_inter = wi; CFG.w_puntual = wp; CFG.w_present = wpr;
-        CFG.u_excelente = Number(document.getElementById('cfg-u-excelente').value) || 95;
-        CFG.u_correcta = Number(document.getElementById('cfg-u-correcta').value) || 80;
-        CFG.obj_puntual = Number(document.getElementById('cfg-obj-dias').value) || 6;
-        CFG.obj_present = CFG.obj_puntual;
-        persistConfig();
-        populateSelects();
-
-        // Detectar cambios y sincronizar
-        const nuevo = {
-          horas_base: CFG.horas_base, tickets_base: CFG.tickets_base,
-          muestras_semana: CFG.muestras_semana, w_inter: CFG.w_inter,
-          w_puntual: CFG.w_puntual, w_present: CFG.w_present,
-          u_excelente: CFG.u_excelente, u_correcta: CFG.u_correcta, obj_puntual: CFG.obj_puntual
-        };
-        const cambios = Object.keys(nuevo).filter(k => anterior[k] !== nuevo[k]);
-        if(cambios.length){
-          const detalle = cambios.map(k=>`${k}: ${anterior[k]} → ${nuevo[k]}`).join(', ');
-          syncConfigToSheets('parametros_actualizados', { cambios: detalle, valores: nuevo });
-        }
-
-        const el = document.getElementById('config-saved');
-        el.classList.remove('hidden');
-        setTimeout(()=>el.classList.add('hidden'), 3000);
-      }
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
     <style>
       :root {
         --bg: #f5f4f0;
@@ -228,7 +44,6 @@
         font-size: 14px;
         min-height: 100vh;
       }
-
       .shell {
         display: grid;
         grid-template-columns: 220px 1fr;
@@ -301,8 +116,6 @@
         color: var(--hint);
         line-height: 1.6;
       }
-
-      /* SHEETS STATUS */
       .sheets-status {
         display: flex;
         align-items: center;
@@ -336,7 +149,6 @@
         background: currentColor;
         flex-shrink: 0;
       }
-
       .main {
         overflow-y: auto;
       }
@@ -348,7 +160,6 @@
       .page.active {
         display: block;
       }
-
       .topbar {
         display: flex;
         align-items: center;
@@ -410,7 +221,6 @@
         opacity: 0.5;
         cursor: not-allowed;
       }
-
       .card {
         background: var(--card);
         border: 1px solid var(--border);
@@ -433,7 +243,6 @@
         color: var(--muted);
         margin-top: 2px;
       }
-
       .metrics {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -473,14 +282,11 @@
         color: var(--hint);
         margin-top: 4px;
       }
-
       .grid2 {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 16px;
       }
-
-      /* FORM */
       .form-progress {
         display: flex;
         margin-bottom: 24px;
@@ -518,7 +324,6 @@
         margin-bottom: 2px;
         opacity: 0.7;
       }
-
       .form-step {
         display: none;
       }
@@ -588,8 +393,6 @@
         font-size: 11px;
         color: var(--hint);
       }
-
-      /* HORAS BANNER */
       .horas-banner {
         background: var(--accent-light);
         border: 1px solid #bfdbfe;
@@ -615,8 +418,6 @@
         color: var(--muted);
         margin-top: 2px;
       }
-
-      /* CRITERIA */
       .criteria-group {
         border: 1px solid var(--border);
         border-radius: var(--r);
@@ -701,7 +502,6 @@
         text-align: center;
         font-weight: 600;
       }
-
       .score-summary {
         background: var(--surface);
         border: 1px solid var(--border);
@@ -746,8 +546,6 @@
         background: var(--red-bg);
         color: var(--red);
       }
-
-      /* PROD */
       .prod-row {
         display: grid;
         grid-template-columns: 1fr 100px 100px 100px;
@@ -781,8 +579,6 @@
         font-weight: 600;
         text-align: center;
       }
-
-      /* TABLE */
       table {
         width: 100%;
         border-collapse: collapse;
@@ -836,7 +632,6 @@
         color: var(--red);
         font-size: 10px;
       }
-
       .step-actions {
         display: flex;
         justify-content: space-between;
@@ -864,8 +659,6 @@
         width: 100%;
         height: 260px;
       }
-
-      /* AGENT */
       .agent-row {
         display: flex;
         align-items: center;
@@ -901,7 +694,6 @@
         border-radius: 3px;
         transition: width 0.4s ease;
       }
-
       .alert {
         padding: 12px 14px;
         border-radius: var(--r);
@@ -932,79 +724,6 @@
       .hidden {
         display: none !important;
       }
-
-      /* SETUP MODAL */
-      .modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.45);
-        z-index: 100;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .modal-box {
-        background: var(--card);
-        border-radius: 12px;
-        padding: 28px;
-        width: 540px;
-        max-width: 95vw;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-      }
-      .modal-box h3 {
-        font-size: 17px;
-        font-weight: 600;
-        margin-bottom: 6px;
-      }
-      .modal-box p {
-        font-size: 13px;
-        color: var(--muted);
-        margin-bottom: 20px;
-        line-height: 1.6;
-      }
-      .setup-step {
-        display: flex;
-        gap: 14px;
-        margin-bottom: 16px;
-        padding: 14px;
-        border: 1px solid var(--border);
-        border-radius: var(--r);
-        background: var(--surface);
-      }
-      .setup-num {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        background: var(--accent);
-        color: #fff;
-        font-size: 12px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        margin-top: 1px;
-      }
-      .setup-txt strong {
-        display: block;
-        font-size: 13px;
-        margin-bottom: 3px;
-      }
-      .setup-txt p {
-        font-size: 12px;
-        color: var(--muted);
-        margin: 0;
-      }
-      .code-chip {
-        font-family: "DM Mono", monospace;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        padding: 2px 7px;
-        border-radius: 4px;
-        font-size: 11px;
-        color: var(--ink);
-      }
-
       .obs-chip {
         display: inline-flex;
         align-items: center;
@@ -1022,87 +741,87 @@
         background: var(--green-bg);
         color: var(--green);
       }
-
-      /* SHEETS LOG */
-      .log-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 0;
-        border-bottom: 1px solid var(--border);
-        font-size: 12px;
-      }
-      .log-row:last-child {
-        border-bottom: none;
-      }
-      .log-time {
-        color: var(--hint);
-        font-family: "DM Mono", monospace;
-        min-width: 60px;
-      }
-      .log-msg {
-        flex: 1;
-        color: var(--ink);
-      }
-      .log-ok {
-        color: var(--green);
-        font-weight: 600;
-      }
-      .log-err {
-        color: var(--red);
-        font-weight: 600;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- BANNER DE CARGA INICIAL -->
-    <div
-      id="loading-banner"
-      style="
-        display: none;
+      /* Loading overlay */
+      #loading-overlay {
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 999;
-        background: #1d4ed8;
-        color: #fff;
-        font-size: 13px;
-        font-weight: 500;
-        padding: 10px 20px;
+        inset: 0;
+        background: rgba(245, 244, 240, 0.92);
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 10px;
         justify-content: center;
-      "
-    >
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        style="animation: spin 1s linear infinite; flex-shrink: 0"
-      >
-        <circle cx="12" cy="12" r="10" stroke-opacity=".3" />
-        <path d="M12 2a10 10 0 0 1 10 10" />
-      </svg>
-      Cargando configuración desde Google Sheets...
-    </div>
-    <style>
+        gap: 16px;
+      }
+      .spinner {
+        width: 36px;
+        height: 36px;
+        border: 3px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
       @keyframes spin {
         to {
           transform: rotate(360deg);
         }
       }
+      #loading-msg {
+        font-size: 14px;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      #loading-sub {
+        font-size: 12px;
+        color: var(--hint);
+      }
+      /* Sync indicator */
+      .sync-bar {
+        background: #1d4ed8;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 8px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        transform: translateY(-100%);
+        transition: transform 0.3s;
+      }
+      .sync-bar.show {
+        transform: translateY(0);
+      }
     </style>
+  </head>
+  <body>
+    <!-- LOADING OVERLAY — visible al inicio mientras carga desde Sheets -->
+    <div id="loading-overlay">
+      <div class="spinner"></div>
+      <div id="loading-msg">Cargando datos desde Google Sheets...</div>
+      <div id="loading-sub">Esto puede tardar unos segundos</div>
+    </div>
+
+    <!-- SYNC INDICATOR — aparece brevemente al enviar datos -->
+    <div class="sync-bar" id="sync-bar">
+      <div
+        class="spinner"
+        style="width: 14px; height: 14px; border-width: 2px"
+      ></div>
+      <span id="sync-bar-msg">Sincronizando con Google Sheets...</span>
+    </div>
 
     <div class="shell">
       <!-- SIDEBAR -->
       <aside class="sidebar">
         <div class="logo-area">
           <h1>AuditCS</h1>
-          <span>Customer Service · v2.1</span>
+          <span>Customer Service · v3.0</span>
         </div>
         <nav class="nav">
           <button class="nav-item active" onclick="showPage('dashboard')">
@@ -1159,16 +878,15 @@
           <button
             class="sheets-status disconnected"
             id="sheets-btn"
-            onclick="openSetup()"
+            onclick="reloadFromSheets()"
           >
             <div class="sheets-dot"></div>
-            <span id="sheets-label">Google Sheets: desconectado</span>
+            <span id="sheets-label">Cargando...</span>
           </button>
         </nav>
         <div class="sidebar-footer">
           <p id="sidebar-info">
-            Responsable: Gabriel<br />Epic: Servicio al Cliente<br />4 muestras
-            / agente / semana
+            Responsable: Gabriel<br />Epic: Servicio al Cliente
           </p>
         </div>
       </aside>
@@ -1183,6 +901,9 @@
               <p>Métricas de desempeño del equipo</p>
             </div>
             <div style="display: flex; gap: 8px">
+              <button class="btn sm" onclick="reloadFromSheets()">
+                ↺ Actualizar
+              </button>
               <button class="btn sm" onclick="exportCSV()">
                 ↓ Exportar CSV
               </button>
@@ -1191,7 +912,6 @@
               </button>
             </div>
           </div>
-
           <div class="metrics">
             <div class="metric">
               <div class="metric-label">Total Auditorías</div>
@@ -1214,7 +934,6 @@
               <div class="metric-sub">calidad + productividad</div>
             </div>
           </div>
-
           <div class="grid2" style="margin-bottom: 16px">
             <div class="card">
               <div class="card-header">
@@ -1223,13 +942,7 @@
                   <div class="card-sub">Calidad 50% · Productividad 50%</div>
                 </div>
               </div>
-              <div class="chart-wrap">
-                <canvas
-                  id="chart-agentes"
-                  role="img"
-                  aria-label="Promedio general por agente"
-                ></canvas>
-              </div>
+              <div class="chart-wrap"><canvas id="chart-agentes"></canvas></div>
             </div>
             <div class="card">
               <div class="card-header">
@@ -1239,11 +952,7 @@
                 </div>
               </div>
               <div class="chart-wrap">
-                <canvas
-                  id="chart-evolucion"
-                  role="img"
-                  aria-label="Evolución calidad"
-                ></canvas>
+                <canvas id="chart-evolucion"></canvas>
               </div>
             </div>
           </div>
@@ -1253,11 +962,7 @@
                 <div class="card-title">Estado de Auditorías</div>
               </div>
               <div class="chart-wrap" style="height: 200px">
-                <canvas
-                  id="chart-estados"
-                  role="img"
-                  aria-label="Distribución por estado"
-                ></canvas>
+                <canvas id="chart-estados"></canvas>
               </div>
             </div>
             <div class="card">
@@ -1275,13 +980,11 @@
           <div class="topbar">
             <div>
               <h2>Nueva Auditoría</h2>
-              <p>Completá los 5 pasos · 4 muestras por agente por semana</p>
+              <p>Completá los 5 pasos</p>
             </div>
           </div>
-
           <div id="form-alert" class="alert success hidden"></div>
           <div id="form-error" class="alert error hidden"></div>
-
           <div class="form-progress">
             <div class="step-tab active" id="tab-1" onclick="goStep(1)">
               <span class="step-num">01</span>Datos
@@ -1307,38 +1010,37 @@
                 <div class="form-section-title">Identificación del Auditor</div>
                 <div class="form-grid">
                   <div class="field">
-                    <label>Auditor *</label>
-                    <select id="f-auditor">
+                    <label>Auditor *</label
+                    ><select id="f-auditor">
                       <option value="">— Seleccionar —</option>
                     </select>
                   </div>
                   <div class="field">
-                    <label>Fecha de Auditoría *</label>
-                    <input type="date" id="f-fecha" />
+                    <label>Fecha de Auditoría *</label
+                    ><input type="date" id="f-fecha" />
                   </div>
                 </div>
               </div>
-
               <div class="form-section">
                 <div class="form-section-title">Datos del Agente Auditado</div>
                 <div class="form-grid cols3">
                   <div class="field">
-                    <label>Agente *</label>
-                    <select id="f-agente" onchange="updateSemanaCount()">
+                    <label>Agente *</label
+                    ><select id="f-agente" onchange="updateSemanaCount()">
                       <option value="">— Seleccionar —</option>
                     </select>
                   </div>
                   <div class="field">
-                    <label>N° de Ticket / Caso *</label>
-                    <input
+                    <label>N° de Ticket / Caso *</label
+                    ><input
                       type="text"
                       id="f-ticket"
                       placeholder="Ej: 5093240"
                     />
                   </div>
                   <div class="field">
-                    <label>Canal *</label>
-                    <select id="f-canal">
+                    <label>Canal *</label
+                    ><select id="f-canal">
                       <option value="">— Seleccionar —</option>
                       <option>WhatsApp</option>
                       <option>Mail</option>
@@ -1346,8 +1048,8 @@
                     </select>
                   </div>
                   <div class="field">
-                    <label>Tipo de Gestión *</label>
-                    <select id="f-tipo">
+                    <label>Tipo de Gestión *</label
+                    ><select id="f-tipo">
                       <option value="">— Seleccionar —</option>
                       <option>Consulta</option>
                       <option>Reclamo</option>
@@ -1356,8 +1058,8 @@
                     </select>
                   </div>
                   <div class="field">
-                    <label>Semana del año *</label>
-                    <input
+                    <label>Semana del año *</label
+                    ><input
                       type="number"
                       id="f-semana"
                       placeholder="Ej: 19"
@@ -1367,8 +1069,8 @@
                     />
                   </div>
                   <div class="field">
-                    <label>Mes</label>
-                    <select id="f-mes">
+                    <label>Mes</label
+                    ><select id="f-mes">
                       <option>Enero</option>
                       <option>Febrero</option>
                       <option>Marzo</option>
@@ -1385,8 +1087,6 @@
                   </div>
                 </div>
               </div>
-
-              <!-- HORAS TRABAJADAS — BLOQUE DESTACADO -->
               <div class="form-section">
                 <div class="form-section-title">
                   Horas Trabajadas en la Semana
@@ -1410,8 +1110,7 @@
                   >
                     Este dato se ingresa
                     <strong>una vez por semana por agente</strong> y determina
-                    el objetivo de interacciones. Se comparte entre las 4
-                    muestras semanales del mismo agente.
+                    el objetivo de interacciones.
                   </p>
                   <div class="form-grid cols3" style="gap: 12px">
                     <div class="field">
@@ -1425,9 +1124,7 @@
                         step="0.5"
                         oninput="updateHorasBanner()"
                       />
-                      <span class="helper"
-                        >Horas reales de la semana (base: 44 hs)</span
-                      >
+                      <span class="helper">Horas reales de la semana</span>
                     </div>
                     <div class="field" style="grid-column: span 2">
                       <label>Objetivo calculado de interacciones</label>
@@ -1464,10 +1161,9 @@
                   "
                 ></div>
               </div>
-
               <div class="step-actions">
-                <span></span>
-                <button class="btn primary" onclick="validateStep1()">
+                <span></span
+                ><button class="btn primary" onclick="validateStep1()">
                   Siguiente →
                 </button>
               </div>
@@ -1517,8 +1213,8 @@
                 <div id="criterios-gestion"></div>
               </div>
               <div class="step-actions">
-                <button class="btn" onclick="goStep(1)">← Anterior</button>
-                <button class="btn primary" onclick="goStep(3)">
+                <button class="btn" onclick="goStep(1)">← Anterior</button
+                ><button class="btn primary" onclick="goStep(3)">
                   Siguiente →
                 </button>
               </div>
@@ -1547,7 +1243,6 @@
                   Editá las horas en el Paso 1
                 </div>
               </div>
-
               <div class="criteria-group">
                 <div class="criteria-header">
                   <span>Métrica</span
@@ -1561,7 +1256,6 @@
                     >Objetivo · Real · % Obtenido</span
                   >
                 </div>
-
                 <div class="prod-row">
                   <div class="prod-label">
                     Interacciones atendidas<span
@@ -1582,10 +1276,10 @@
                 <div class="prod-row">
                   <div class="prod-label">
                     Días llegadas tarde<span
-                      >Peso: 20% de productividad · Obj: 6 días</span
+                      >Peso: 20% de productividad · Obj: máx. permitido</span
                     >
                   </div>
-                  <div class="prod-target">6</div>
+                  <div class="prod-target" id="obj-tarde">—</div>
                   <input
                     type="number"
                     id="p-tarde"
@@ -1600,10 +1294,10 @@
                 <div class="prod-row">
                   <div class="prod-label">
                     Días faltados<span
-                      >Peso: 20% de productividad · Obj: 6 días</span
+                      >Peso: 20% de productividad · Obj: máx. permitido</span
                     >
                   </div>
-                  <div class="prod-target">6</div>
+                  <div class="prod-target" id="obj-faltas">—</div>
                   <input
                     type="number"
                     id="p-faltas"
@@ -1616,7 +1310,6 @@
                   <div class="prod-pct" id="pct-present">—</div>
                 </div>
               </div>
-
               <div class="score-summary" style="margin-top: 16px">
                 <div class="score-item">
                   <div
@@ -1649,10 +1342,9 @@
                   <div class="score-item-label">Total Productividad</div>
                 </div>
               </div>
-
               <div class="step-actions">
-                <button class="btn" onclick="goStep(2)">← Anterior</button>
-                <button class="btn primary" onclick="goStep(4)">
+                <button class="btn" onclick="goStep(2)">← Anterior</button
+                ><button class="btn primary" onclick="goStep(4)">
                   Siguiente →
                 </button>
               </div>
@@ -1666,40 +1358,40 @@
                 <div class="form-section-title">Observaciones del Auditor</div>
                 <div style="display: flex; flex-direction: column; gap: 12px">
                   <div class="field">
-                    <label>Observación general</label>
-                    <textarea
+                    <label>Observación general</label
+                    ><textarea
                       id="f-obs-general"
                       rows="4"
-                      placeholder="Describir el desempeño general del agente en este caso..."
+                      placeholder="Describir el desempeño general..."
                     ></textarea>
                   </div>
                   <div class="field">
-                    <label>Desvíos detectados</label>
-                    <textarea
+                    <label>Desvíos detectados</label
+                    ><textarea
                       id="f-obs-desvios"
                       rows="3"
-                      placeholder="Indicar criterios incumplidos y justificación..."
+                      placeholder="Indicar criterios incumplidos..."
                     ></textarea>
                   </div>
                   <div class="field">
-                    <label>Acción sugerida</label>
-                    <textarea
+                    <label>Acción sugerida</label
+                    ><textarea
                       id="f-obs-accion"
                       rows="3"
-                      placeholder="Recomendaciones de mejora, refuerzo, capacitación..."
+                      placeholder="Recomendaciones de mejora..."
                     ></textarea>
                   </div>
                   <div class="form-grid">
                     <div class="field">
-                      <label>¿Requiere seguimiento?</label>
-                      <select id="f-seguimiento">
+                      <label>¿Requiere seguimiento?</label
+                      ><select id="f-seguimiento">
                         <option value="No">No</option>
                         <option value="Sí">Sí</option>
                       </select>
                     </div>
                     <div class="field">
-                      <label>Responsable de seguimiento</label>
-                      <input
+                      <label>Responsable de seguimiento</label
+                      ><input
                         type="text"
                         id="f-resp-seg"
                         placeholder="Nombre del supervisor"
@@ -1709,8 +1401,8 @@
                 </div>
               </div>
               <div class="step-actions">
-                <button class="btn" onclick="goStep(3)">← Anterior</button>
-                <button class="btn primary" onclick="goStep(5)">
+                <button class="btn" onclick="goStep(3)">← Anterior</button
+                ><button class="btn primary" onclick="goStep(5)">
                   Ver Resumen →
                 </button>
               </div>
@@ -1729,8 +1421,8 @@
               </div>
               <div id="resumen-content"></div>
               <div class="step-actions">
-                <button class="btn" onclick="goStep(4)">← Editar</button>
-                <button
+                <button class="btn" onclick="goStep(4)">← Editar</button
+                ><button
                   class="btn success"
                   id="btn-submit"
                   onclick="submitAuditoria()"
@@ -1749,7 +1441,14 @@
               <h2>Registros</h2>
               <p>Historial completo de auditorías</p>
             </div>
-            <button class="btn sm" onclick="exportCSV()">↓ Exportar CSV</button>
+            <div style="display: flex; gap: 8px">
+              <button class="btn sm" onclick="reloadFromSheets()">
+                ↺ Actualizar
+              </button>
+              <button class="btn sm" onclick="exportCSV()">
+                ↓ Exportar CSV
+              </button>
+            </div>
           </div>
           <div class="card">
             <div class="filter-bar">
@@ -1768,7 +1467,26 @@
               <select id="filter-agente" onchange="renderRegistros()">
                 <option value="">Todos los agentes</option>
               </select>
+              <select id="filter-mes" onchange="renderRegistros()">
+                <option value="">Todos los meses</option>
+                <option>Enero</option>
+                <option>Febrero</option>
+                <option>Marzo</option>
+                <option>Abril</option>
+                <option>Mayo</option>
+                <option>Junio</option>
+                <option>Julio</option>
+                <option>Agosto</option>
+                <option>Septiembre</option>
+                <option>Octubre</option>
+                <option>Noviembre</option>
+                <option>Diciembre</option>
+              </select>
             </div>
+            <div
+              id="registros-count"
+              style="font-size: 12px; color: var(--muted); margin-bottom: 10px"
+            ></div>
             <div style="overflow-x: auto">
               <table>
                 <thead>
@@ -1780,10 +1498,11 @@
                     <th>Canal</th>
                     <th>Horas</th>
                     <th>Calidad</th>
-                    <th>Productividad</th>
+                    <th>Prod.</th>
                     <th>General</th>
                     <th>Estado</th>
                     <th>Sheets</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody id="tbody-registros"></tbody>
@@ -1855,7 +1574,7 @@
           <div class="topbar">
             <div>
               <h2>Configuración</h2>
-              <p>Agentes, auditores, conexión y parámetros del sistema</p>
+              <p>Agentes, auditores y parámetros del sistema</p>
             </div>
             <div style="display: flex; align-items: center; gap: 10px">
               <span id="cfg-sync-badge"></span>
@@ -1864,12 +1583,11 @@
               </button>
             </div>
           </div>
-
           <div id="config-saved" class="alert success hidden">
             ✓ Configuración guardada y sincronizada con Google Sheets.
           </div>
 
-          <!-- SHEETS -->
+          <!-- SHEETS URL -->
           <div class="card" style="margin-bottom: 16px">
             <div class="card-header">
               <div>
@@ -1895,10 +1613,13 @@
                 Guardar URL
               </button>
               <button class="btn sm" onclick="testSheets()">Probar</button>
+              <button class="btn sm" onclick="reloadFromSheets()">
+                ↺ Recargar datos
+              </button>
             </div>
             <p style="font-size: 11px; color: var(--hint); margin-top: 8px">
-              Cada auditoría se envía automáticamente al registrarla. Si cambia
-              la URL, actualizala aquí.
+              Cada auditoría se envía automáticamente. Al hacer "Recargar datos"
+              se trae todo el historial desde Sheets.
             </p>
           </div>
 
@@ -1927,7 +1648,6 @@
                 </button>
               </div>
             </div>
-
             <!-- AUDITORES -->
             <div class="card">
               <div class="card-header">
@@ -1954,7 +1674,7 @@
             </div>
           </div>
 
-          <!-- PARÁMETROS PRODUCTIVIDAD -->
+          <!-- PARÁMETROS -->
           <div class="card">
             <div class="card-header">
               <div>
@@ -1964,7 +1684,7 @@
             </div>
             <div class="form-grid cols3" style="gap: 14px">
               <div class="field">
-                <label>Horas base (semana estándar)</label
+                <label>Horas base</label
                 ><input
                   type="number"
                   id="cfg-horas-base"
@@ -1981,10 +1701,7 @@
               </div>
               <div class="field">
                 <label>Muestras por agente/semana</label
-                ><input type="number" id="cfg-muestras" min="1" max="10" /><span
-                  class="helper"
-                  >Ej: 4</span
-                >
+                ><input type="number" id="cfg-muestras" min="1" max="10" />
               </div>
               <div class="field">
                 <label>Peso interacciones (%)</label
@@ -2043,7 +1760,7 @@
               "
               id="cfg-pesos-check"
             >
-              Los pesos de productividad deben sumar 100%.
+              Los pesos deben sumar 100%.
             </div>
           </div>
         </div>
@@ -2051,15 +1768,19 @@
     </div>
 
     <script>
-      // ====== STORE ======
+      // ================================================================
+      // STORE — fuente de verdad en memoria, siempre sincronizada con Sheets
+      // ================================================================
       const DB = { auditorias: [], nextId: 1 };
-      let sheetsLog = [];
+      let _loadedFromSheets = false;
 
-      // ====== CONFIG GLOBAL (editable desde Configuración) ======
-      const CONFIG_KEY = "auditcs_config";
+      // ================================================================
+      // CONFIG
+      // ================================================================
+      const CONFIG_KEY = "auditcs_config_v3";
       const DEFAULT_CONFIG = {
         sheets_url:
-          "https://script.google.com/macros/s/AKfycbwUb2EBHHTwxJA629Zwf-tPZ5RMbB31J_G1HLlSvy2iT5oJFEMMzqYfRkiuXm7AW8uL/exec",
+          "https://script.google.com/macros/s/AKfycby-uvaKCs5LbqOirM_gSeZTMtK9la__4mJE1UTuxApW_WPEmUhTRUcpzSPpMgRVwCgi/exec",
         agentes: [
           "Agostina Moya",
           "Rodrigo Arrieta",
@@ -2083,142 +1804,42 @@
         u_correcta: 80,
       };
 
-      // localStorage solo guarda la URL — lo demás siempre viene de Sheets
-      function loadCachedUrl() {
+      let CFG = { ...DEFAULT_CONFIG };
+
+      function loadLocalCfg() {
         try {
           const s = localStorage.getItem(CONFIG_KEY);
-          return s ? JSON.parse(s).sheets_url || "" : "";
-        } catch (e) {
-          return "";
-        }
+          if (!s) return;
+          const saved = JSON.parse(s);
+          // Solo persistimos la URL localmente; el resto viene de Sheets
+          if (saved.sheets_url) CFG.sheets_url = saved.sheets_url;
+        } catch (e) {}
       }
       function persistConfig() {
-        localStorage.setItem(
-          CONFIG_KEY,
-          JSON.stringify({ sheets_url: CFG.sheets_url }),
-        );
-      }
-
-      let CFG = { ...DEFAULT_CONFIG };
-      let SHEETS_URL = loadCachedUrl() || DEFAULT_CONFIG.sheets_url;
-      CFG.sheets_url = SHEETS_URL;
-
-      // ====== CARGA CONFIG DESDE SHEETS ======
-      let _configLoaded = false;
-
-      async function loadConfigFromSheets() {
-        const banner = document.getElementById("loading-banner");
-        if (banner) banner.style.display = "flex";
-        if (!SHEETS_URL) {
-          if (banner) banner.style.display = "none";
-          return;
-        }
+        // Solo guardamos la URL en localStorage — el resto vive en Sheets
         try {
-          const resp = await fetch(SHEETS_URL + "?action=get_config", {
-            method: "GET",
-          });
-          if (!resp.ok) throw new Error("HTTP " + resp.status);
-          const data = await resp.json();
-          if (data.status === "ok" && data.config) {
-            const c = data.config;
-            if (c.agentes && c.agentes.length) CFG.agentes = c.agentes;
-            if (c.auditores && c.auditores.length) CFG.auditores = c.auditores;
-            if (c.horas_base) CFG.horas_base = Number(c.horas_base);
-            if (c.tickets_base) CFG.tickets_base = Number(c.tickets_base);
-            if (c.muestras_semana)
-              CFG.muestras_semana = Number(c.muestras_semana);
-            if (c.w_inter != null) CFG.w_inter = Number(c.w_inter);
-            if (c.w_puntual != null) CFG.w_puntual = Number(c.w_puntual);
-            if (c.w_present != null) CFG.w_present = Number(c.w_present);
-            if (c.u_excelente != null) CFG.u_excelente = Number(c.u_excelente);
-            if (c.u_correcta != null) CFG.u_correcta = Number(c.u_correcta);
-            if (c.obj_puntual != null) {
-              CFG.obj_puntual = Number(c.obj_puntual);
-              CFG.obj_present = CFG.obj_puntual;
-            }
-            _configLoaded = true;
-            showLoadBadge("ok", "Config cargada desde Sheets");
-          } else {
-            showLoadBadge(
-              "warn",
-              "Sheets no devolvió config — usando respaldo",
-            );
-          }
-        } catch (e) {
-          showLoadBadge(
-            "warn",
-            "Sin conexión a Sheets — usando valores por defecto",
+          localStorage.setItem(
+            CONFIG_KEY,
+            JSON.stringify({ sheets_url: CFG.sheets_url }),
           );
-        } finally {
-          if (banner) banner.style.display = "none";
-        }
-        populateSelects();
-        updateSheetsUI();
+        } catch (e) {}
       }
-
-      function showLoadBadge(type, msg) {
-        const el = document.getElementById("cfg-sync-badge");
-        if (!el) return;
-        const cls = type === "ok" ? "badge-excelente" : "badge-observada";
-        el.innerHTML =
-          '<span class="badge ' +
-          cls +
-          '" style="font-size:11px">' +
-          msg +
-          "</span>";
-        if (type === "ok")
-          setTimeout(() => {
-            el.innerHTML = "";
-          }, 5000);
-      }
-
-      // ====== SYNC CONFIG → SHEETS ======
-      async function syncConfigToSheets(accion, detalle) {
-        if (!SHEETS_URL) return;
-        const payload = {
-          _type: "config_change",
-          accion,
-          timestamp: new Date().toISOString(),
-          agentes: CFG.agentes,
-          auditores: CFG.auditores,
-          parametros: {
-            horas_base: CFG.horas_base,
-            tickets_base: CFG.tickets_base,
-            muestras_semana: CFG.muestras_semana,
-            w_inter: CFG.w_inter,
-            w_puntual: CFG.w_puntual,
-            w_present: CFG.w_present,
-            u_excelente: CFG.u_excelente,
-            u_correcta: CFG.u_correcta,
-            obj_puntual: CFG.obj_puntual,
-          },
-          detalle,
-        };
+      function persistNextId() {
         try {
-          await fetch(SHEETS_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          const badge = document.getElementById("cfg-sync-badge");
-          if (badge)
-            badge.innerHTML =
-              '<span class="badge badge-excelente">✓ Sincronizado ' +
-              new Date().toLocaleTimeString("es", {
-                hour: "2-digit",
-                minute: "2-digit",
-              }) +
-              "</span>";
+          localStorage.setItem("auditcs_nextid", String(DB.nextId));
+        } catch (e) {}
+      }
+      function loadNextId() {
+        try {
+          return parseInt(localStorage.getItem("auditcs_nextid")) || 1;
         } catch (e) {
-          const badge = document.getElementById("cfg-sync-badge");
-          if (badge)
-            badge.innerHTML =
-              '<span class="badge badge-observada">⚠ Sin sincronizar</span>';
+          return 1;
         }
       }
 
-      // ====== CRITERIOS ======
+      // ================================================================
+      // CRITERIOS
+      // ================================================================
       const CRITERIOS = {
         comunicacion: [
           { cod: "COM_SALUDO", nombre: "Saludo inicial", peso: 2 },
@@ -2262,7 +1883,6 @@
         ],
       };
 
-      // PROD and UMBRALES are now derived from CFG
       const getPROD = () => ({
         horas_base: CFG.horas_base,
         tickets_base: CFG.tickets_base,
@@ -2277,70 +1897,501 @@
         correcta: CFG.u_correcta,
       });
 
-      // ====== SHEETS ======
-      function updateSheetsUI() {
-        const btn = document.getElementById("sheets-btn");
-        const lbl = document.getElementById("sheets-label");
-        if (SHEETS_URL) {
-          btn.className = "sheets-status connected";
-          lbl.textContent = "Sheets: conectado";
-        } else {
-          btn.className = "sheets-status disconnected";
-          lbl.textContent = "Sheets: desconectado";
+      // ================================================================
+      // SYNC BAR HELPER
+      // ================================================================
+      let _syncTimer = null;
+      function showSyncBar(msg) {
+        const bar = document.getElementById("sync-bar");
+        document.getElementById("sync-bar-msg").textContent = msg;
+        bar.classList.add("show");
+        clearTimeout(_syncTimer);
+      }
+      function hideSyncBar(msg, delay = 2000) {
+        document.getElementById("sync-bar-msg").textContent = msg;
+        _syncTimer = setTimeout(
+          () => document.getElementById("sync-bar").classList.remove("show"),
+          delay,
+        );
+      }
+
+      // ================================================================
+      // CARGA INICIAL DESDE SHEETS (fuente de verdad)
+      // ================================================================
+      async function reloadFromSheets() {
+        const overlay = document.getElementById("loading-overlay");
+        const msg = document.getElementById("loading-msg");
+        const sub = document.getElementById("loading-sub");
+
+        if (!CFG.sheets_url) {
+          overlay.style.display = "none";
+          updateSheetsUI("disconnected");
+          return;
         }
-        const badge = document.getElementById("cfg-sheets-badge");
-        if (badge)
-          badge.innerHTML = SHEETS_URL
-            ? '<span class="badge badge-excelente">✓ Conectado</span>'
-            : '<span class="badge badge-observada">✗ Sin URL</span>';
-      }
 
-      function openSetup() {
-        showPage("configuracion");
-      }
-      function skipSetup() {
-        document.getElementById("setup-modal").style.display = "none";
-      }
+        overlay.style.display = "flex";
+        msg.textContent = "Cargando datos desde Google Sheets...";
+        sub.textContent = "Esto puede tardar unos segundos";
 
-      async function sendToSheets(payload) {
-        if (!SHEETS_URL) return { ok: false, msg: "Sin URL configurada" };
-        const btn = document.getElementById("sheets-btn");
-        const lbl = document.getElementById("sheets-label");
-        btn.className = "sheets-status sending";
-        lbl.textContent = "Enviando...";
         try {
-          const resp = await fetch(SHEETS_URL, {
+          // Lanzar las 3 peticiones en paralelo para reducir tiempo de carga
+          const [cfgResp, audResp, detResp] = await Promise.all([
+            fetch(CFG.sheets_url + "?action=get_config"),
+            fetch(CFG.sheets_url + "?action=get_auditorias"),
+            fetch(CFG.sheets_url + "?action=get_detalle"),
+          ]);
+
+          msg.textContent = "Procesando respuesta...";
+
+          // --- Config ---
+          if (cfgResp.ok) {
+            const cfgData = await cfgResp.json();
+            if (cfgData.status === "ok" && cfgData.config) {
+              const c = cfgData.config;
+              if (c.agentes?.length) CFG.agentes = c.agentes;
+              if (c.auditores?.length) CFG.auditores = c.auditores;
+              if (c.horas_base) CFG.horas_base = Number(c.horas_base);
+              if (c.tickets_base) CFG.tickets_base = Number(c.tickets_base);
+              if (c.muestras_semana)
+                CFG.muestras_semana = Number(c.muestras_semana);
+              if (c.w_inter != null) CFG.w_inter = Number(c.w_inter);
+              if (c.w_puntual != null) CFG.w_puntual = Number(c.w_puntual);
+              if (c.w_present != null) CFG.w_present = Number(c.w_present);
+              if (c.u_excelente != null)
+                CFG.u_excelente = Number(c.u_excelente);
+              if (c.u_correcta != null) CFG.u_correcta = Number(c.u_correcta);
+              if (c.obj_puntual != null) {
+                CFG.obj_puntual = Number(c.obj_puntual);
+                CFG.obj_present = CFG.obj_puntual;
+              }
+            }
+          }
+
+          // --- Auditorías ---
+          let auditorias = [];
+          if (audResp.ok) {
+            const audData = await audResp.json();
+            if (audData.status === "ok") auditorias = audData.auditorias || [];
+          }
+
+          // --- Detalle de criterios ---
+          let detalle = {};
+          if (detResp.ok) {
+            const detData = await detResp.json();
+            if (detData.status === "ok") detalle = detData.detalle || {};
+          }
+
+          // Combinar criterios en cada auditoría
+          auditorias.forEach((a) => {
+            a.criterios = detalle[a.id_auditoria] || [];
+          });
+
+          // Reconstruir DB: limpiar y cargar desde Sheets
+          DB.auditorias = auditorias;
+
+          // Calcular nextId basándonos en los IDs existentes
+          const maxId = auditorias.reduce((max, a) => {
+            const n = parseInt(String(a.id_auditoria).replace("AUD-", "")) || 0;
+            return Math.max(max, n);
+          }, 0);
+          DB.nextId = Math.max(maxId + 1, loadNextId());
+          persistNextId();
+
+          _loadedFromSheets = true;
+          updateSheetsUI("connected");
+          populateSelects();
+          renderDashboard();
+
+          msg.textContent = `✓ ${auditorias.length} auditorías cargadas`;
+          sub.textContent = "La pantalla se actualizó correctamente";
+          setTimeout(() => {
+            overlay.style.display = "none";
+          }, 800);
+        } catch (err) {
+          console.error("Error cargando desde Sheets:", err);
+          updateSheetsUI("disconnected");
+          msg.textContent = "⚠ No se pudo conectar con Google Sheets";
+          sub.textContent =
+            "Verificá la URL en Configuración. Trabajando offline.";
+          setTimeout(() => {
+            overlay.style.display = "none";
+          }, 2500);
+        }
+      }
+
+      // ================================================================
+      // ENVIAR A SHEETS (auditoría nueva)
+      // ================================================================
+      async function sendToSheets(payload) {
+        if (!CFG.sheets_url) return { ok: false };
+        showSyncBar("Enviando a Google Sheets...");
+        try {
+          await fetch(CFG.sheets_url, {
             method: "POST",
             mode: "no-cors",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-          // no-cors always resolves opaquely — we log OK optimistically
-          sheetsLog.unshift({
-            time: new Date().toLocaleTimeString("es", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            msg: "Auditoría " + payload.id_auditoria + " enviada",
-            ok: true,
-          });
-          updateSheetsUI();
+          hideSyncBar("✓ Guardado en Sheets", 2500);
           return { ok: true };
         } catch (e) {
-          sheetsLog.unshift({
-            time: new Date().toLocaleTimeString("es", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            msg: "Error al enviar: " + e.message,
-            ok: false,
-          });
-          updateSheetsUI();
-          return { ok: false, msg: e.message };
+          hideSyncBar("⚠ Error al enviar a Sheets", 3000);
+          return { ok: false };
         }
       }
 
-      // ====== NAV ======
+      // ================================================================
+      // ELIMINAR AUDITORÍA (local + Sheets)
+      // ================================================================
+      async function deleteAuditoria(id) {
+        if (
+          !confirm(
+            `¿Eliminar la auditoría ${id}? Esta acción no se puede deshacer.`,
+          )
+        )
+          return;
+
+        // Eliminar del DB local
+        DB.auditorias = DB.auditorias.filter((a) => a.id_auditoria !== id);
+
+        // Eliminar en Sheets
+        if (CFG.sheets_url) {
+          showSyncBar("Eliminando de Google Sheets...");
+          try {
+            await fetch(CFG.sheets_url, {
+              method: "POST",
+              mode: "no-cors",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                _type: "delete_auditoria",
+                id_auditoria: id,
+              }),
+            });
+            hideSyncBar("✓ Eliminado de Sheets", 2500);
+          } catch (e) {
+            hideSyncBar("⚠ Error al eliminar en Sheets", 3000);
+          }
+        }
+        renderRegistros();
+        renderDashboard();
+      }
+
+      // ================================================================
+      // SYNC CONFIG → SHEETS
+      // ================================================================
+      async function syncConfigToSheets(accion, detalle) {
+        if (!CFG.sheets_url) return;
+        showSyncBar("Sincronizando configuración...");
+        const payload = {
+          _type: "config_change",
+          accion,
+          timestamp: new Date().toISOString(),
+          agentes: CFG.agentes,
+          auditores: CFG.auditores,
+          parametros: {
+            horas_base: CFG.horas_base,
+            tickets_base: CFG.tickets_base,
+            muestras_semana: CFG.muestras_semana,
+            w_inter: CFG.w_inter,
+            w_puntual: CFG.w_puntual,
+            w_present: CFG.w_present,
+            u_excelente: CFG.u_excelente,
+            u_correcta: CFG.u_correcta,
+            obj_puntual: CFG.obj_puntual,
+          },
+          detalle,
+        };
+        try {
+          await fetch(CFG.sheets_url, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          hideSyncBar("✓ Configuración sincronizada", 2500);
+          const badge = document.getElementById("cfg-sync-badge");
+          if (badge)
+            badge.innerHTML = `<span class="badge badge-excelente">✓ Sincronizado ${new Date().toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}</span>`;
+        } catch (e) {
+          hideSyncBar("⚠ Error de sincronización", 3000);
+        }
+      }
+
+      // ================================================================
+      // SHEETS UI
+      // ================================================================
+      function updateSheetsUI(state) {
+        const btn = document.getElementById("sheets-btn");
+        const lbl = document.getElementById("sheets-label");
+        const badge = document.getElementById("cfg-sheets-badge");
+        if (state === "connected") {
+          btn.className = "sheets-status connected";
+          lbl.textContent = `Sheets: conectado · ${DB.auditorias.length} registros`;
+          if (badge)
+            badge.innerHTML =
+              '<span class="badge badge-excelente">✓ Conectado</span>';
+        } else {
+          btn.className = "sheets-status disconnected";
+          lbl.textContent = "Sheets: desconectado";
+          if (badge)
+            badge.innerHTML =
+              '<span class="badge badge-observada">✗ Sin conexión</span>';
+        }
+      }
+
+      async function testSheets() {
+        if (!CFG.sheets_url) {
+          alert("No hay URL configurada.");
+          return;
+        }
+        const badge = document.getElementById("cfg-sheets-badge");
+        badge.innerHTML =
+          '<span class="badge badge-observada">Probando...</span>';
+        try {
+          const resp = await fetch(CFG.sheets_url + "?action=get_config");
+          if (!resp.ok) throw new Error("HTTP " + resp.status);
+          const data = await resp.json();
+          if (data.status === "ok")
+            badge.innerHTML =
+              '<span class="badge badge-excelente">✓ Conexión OK</span>';
+          else
+            badge.innerHTML = `<span class="badge badge-observada">⚠ Error: ${data.message}</span>`;
+        } catch (e) {
+          badge.innerHTML = `<span class="badge badge-observada">✗ ${e.message}</span>`;
+        }
+      }
+
+      // ================================================================
+      // CONFIGURACIÓN UI
+      // ================================================================
+      function populateSelects() {
+        const ag = document.getElementById("f-agente");
+        if (ag) {
+          ag.innerHTML =
+            '<option value="">— Seleccionar —</option>' +
+            CFG.agentes.map((a) => `<option>${a}</option>`).join("");
+        }
+        const aud = document.getElementById("f-auditor");
+        if (aud) {
+          aud.innerHTML =
+            '<option value="">— Seleccionar —</option>' +
+            CFG.auditores.map((a) => `<option>${a}</option>`).join("");
+        }
+        const fa = document.getElementById("filter-agente");
+        if (fa) {
+          fa.innerHTML =
+            '<option value="">Todos los agentes</option>' +
+            CFG.agentes.map((a) => `<option>${a}</option>`).join("");
+        }
+        const sidebar = document.getElementById("sidebar-info");
+        if (sidebar)
+          sidebar.innerHTML = `Responsable: ${CFG.auditores[0] || "—"}<br/>Epic: Servicio al Cliente<br/>${CFG.muestras_semana} muestras / agente / semana`;
+      }
+
+      function renderConfigPage() {
+        document.getElementById("cfg-sheets-url").value = CFG.sheets_url || "";
+        document.getElementById("cfg-horas-base").value = CFG.horas_base;
+        document.getElementById("cfg-tickets-base").value = CFG.tickets_base;
+        document.getElementById("cfg-muestras").value = CFG.muestras_semana;
+        document.getElementById("cfg-w-inter").value = CFG.w_inter;
+        document.getElementById("cfg-w-puntual").value = CFG.w_puntual;
+        document.getElementById("cfg-w-present").value = CFG.w_present;
+        document.getElementById("cfg-u-excelente").value = CFG.u_excelente;
+        document.getElementById("cfg-u-correcta").value = CFG.u_correcta;
+        document.getElementById("cfg-obj-dias").value = CFG.obj_puntual;
+        renderListaAgentes();
+        renderListaAuditores();
+        const badge = document.getElementById("cfg-sheets-badge");
+        if (badge)
+          badge.innerHTML = CFG.sheets_url
+            ? '<span class="badge badge-excelente">✓ Conectado</span>'
+            : '<span class="badge badge-observada">✗ Sin URL</span>';
+        checkPesos();
+      }
+
+      function renderListaAgentes() {
+        const cont = document.getElementById("lista-agentes");
+        if (!cont) return;
+        if (!CFG.agentes.length) {
+          cont.innerHTML =
+            '<p style="color:var(--hint);font-size:12px">Sin agentes.</p>';
+          return;
+        }
+        cont.innerHTML = CFG.agentes
+          .map(
+            (a, i) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+          <div class="avatar" style="width:28px;height:28px;font-size:11px">${a
+            .split(" ")
+            .map((p) => p[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase()}</div>
+          <div style="flex:1;font-size:13px">${a}</div>
+          <button class="btn sm danger" onclick="removeAgente(${i})" style="padding:3px 8px">✕</button>
+        </div>`,
+          )
+          .join("");
+      }
+      function renderListaAuditores() {
+        const cont = document.getElementById("lista-auditores");
+        if (!cont) return;
+        if (!CFG.auditores.length) {
+          cont.innerHTML =
+            '<p style="color:var(--hint);font-size:12px">Sin auditores.</p>';
+          return;
+        }
+        cont.innerHTML = CFG.auditores
+          .map(
+            (a, i) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+          <div style="flex:1;font-size:13px;font-weight:500">${a}</div>
+          <button class="btn sm danger" onclick="removeAuditor(${i})" style="padding:3px 8px">✕</button>
+        </div>`,
+          )
+          .join("");
+      }
+
+      function addAgente() {
+        const inp = document.getElementById("nuevo-agente");
+        const val = inp.value.trim();
+        if (!val) return;
+        if (CFG.agentes.includes(val)) {
+          alert("Este agente ya existe.");
+          return;
+        }
+        CFG.agentes.push(val);
+        inp.value = "";
+        populateSelects();
+        renderListaAgentes();
+        syncConfigToSheets("agente_agregado", { agente: val });
+      }
+      function removeAgente(i) {
+        const nombre = CFG.agentes[i];
+        CFG.agentes.splice(i, 1);
+        populateSelects();
+        renderListaAgentes();
+        syncConfigToSheets("agente_eliminado", { agente: nombre });
+      }
+      function addAuditor() {
+        const inp = document.getElementById("nuevo-auditor");
+        const val = inp.value.trim();
+        if (!val) return;
+        if (CFG.auditores.includes(val)) {
+          alert("Este auditor ya existe.");
+          return;
+        }
+        CFG.auditores.push(val);
+        inp.value = "";
+        populateSelects();
+        renderListaAuditores();
+        syncConfigToSheets("auditor_agregado", { auditor: val });
+      }
+      function removeAuditor(i) {
+        const nombre = CFG.auditores[i];
+        CFG.auditores.splice(i, 1);
+        populateSelects();
+        renderListaAuditores();
+        syncConfigToSheets("auditor_eliminado", { auditor: nombre });
+      }
+
+      function checkPesos() {
+        const wi = Number(document.getElementById("cfg-w-inter").value) || 0;
+        const wp = Number(document.getElementById("cfg-w-puntual").value) || 0;
+        const wpr = Number(document.getElementById("cfg-w-present").value) || 0;
+        const sum = wi + wp + wpr;
+        const el = document.getElementById("cfg-pesos-check");
+        if (!el) return;
+        el.textContent =
+          sum === 100
+            ? "✓ Los pesos suman 100%. Correcto."
+            : `⚠ Los pesos suman ${sum}% (deben sumar 100%).`;
+        el.style.color = sum === 100 ? "var(--green)" : "var(--red)";
+      }
+
+      function saveConfigSheets() {
+        const url = document.getElementById("cfg-sheets-url").value.trim();
+        if (url && !url.startsWith("https://script.google.com")) {
+          alert("URL inválida. Debe ser de script.google.com");
+          return;
+        }
+        CFG.sheets_url = url;
+        persistConfig();
+        updateSheetsUI(url ? "connected" : "disconnected");
+      }
+
+      function saveConfig() {
+        const wi = Number(document.getElementById("cfg-w-inter").value);
+        const wp = Number(document.getElementById("cfg-w-puntual").value);
+        const wpr = Number(document.getElementById("cfg-w-present").value);
+        if (wi + wp + wpr !== 100) {
+          alert("Los pesos deben sumar exactamente 100%.");
+          return;
+        }
+
+        const anterior = {
+          horas_base: CFG.horas_base,
+          tickets_base: CFG.tickets_base,
+          muestras_semana: CFG.muestras_semana,
+          w_inter: CFG.w_inter,
+          w_puntual: CFG.w_puntual,
+          w_present: CFG.w_present,
+          u_excelente: CFG.u_excelente,
+          u_correcta: CFG.u_correcta,
+          obj_puntual: CFG.obj_puntual,
+        };
+
+        saveConfigSheets();
+        CFG.horas_base =
+          Number(document.getElementById("cfg-horas-base").value) || 44;
+        CFG.tickets_base =
+          Number(document.getElementById("cfg-tickets-base").value) || 660;
+        CFG.muestras_semana =
+          Number(document.getElementById("cfg-muestras").value) || 4;
+        CFG.w_inter = wi;
+        CFG.w_puntual = wp;
+        CFG.w_present = wpr;
+        CFG.u_excelente =
+          Number(document.getElementById("cfg-u-excelente").value) || 95;
+        CFG.u_correcta =
+          Number(document.getElementById("cfg-u-correcta").value) || 80;
+        CFG.obj_puntual =
+          Number(document.getElementById("cfg-obj-dias").value) || 6;
+        CFG.obj_present = CFG.obj_puntual;
+        populateSelects();
+
+        const nuevo = {
+          horas_base: CFG.horas_base,
+          tickets_base: CFG.tickets_base,
+          muestras_semana: CFG.muestras_semana,
+          w_inter: CFG.w_inter,
+          w_puntual: CFG.w_puntual,
+          w_present: CFG.w_present,
+          u_excelente: CFG.u_excelente,
+          u_correcta: CFG.u_correcta,
+          obj_puntual: CFG.obj_puntual,
+        };
+        const cambios = Object.keys(nuevo).filter(
+          (k) => anterior[k] !== nuevo[k],
+        );
+        if (cambios.length) {
+          const detalle = cambios
+            .map((k) => `${k}: ${anterior[k]} → ${nuevo[k]}`)
+            .join(", ");
+          syncConfigToSheets("parametros_actualizados", {
+            cambios: detalle,
+            valores: nuevo,
+          });
+        }
+
+        const el = document.getElementById("config-saved");
+        el.classList.remove("hidden");
+        setTimeout(() => el.classList.add("hidden"), 3000);
+      }
+
+      // ================================================================
+      // NAV
+      // ================================================================
       function showPage(id) {
         document
           .querySelectorAll(".page")
@@ -2357,15 +2408,17 @@
           agentes: 4,
           configuracion: 5,
         };
-        if (id === "configuracion") renderConfigPage();
         document.querySelectorAll(".nav-item")[map[id]].classList.add("active");
+        if (id === "configuracion") renderConfigPage();
         if (id === "dashboard") renderDashboard();
         if (id === "registros") renderRegistros();
         if (id === "observaciones") renderObservaciones();
         if (id === "agentes") renderAgentes();
       }
 
-      // ====== STEP WIZARD ======
+      // ================================================================
+      // WIZARD
+      // ================================================================
       function goStep(n) {
         document
           .querySelectorAll(".form-step")
@@ -2394,9 +2447,7 @@
         ];
         for (const id of required) {
           if (!document.getElementById(id).value.trim()) {
-            alert(
-              "Completá todos los campos obligatorios, incluyendo las horas trabajadas.",
-            );
+            alert("Completá todos los campos obligatorios.");
             document.getElementById(id).focus();
             return;
           }
@@ -2404,15 +2455,15 @@
         goStep(2);
       }
 
-      // ====== HORAS ======
+      // ================================================================
+      // HORAS
+      // ================================================================
       function calcObjetivo(horas) {
-        const PROD = getPROD();
-        const h = Number(horas),
+        const PROD = getPROD(),
+          h = Number(horas),
           b = PROD.horas_base,
           t = PROD.tickets_base;
         if (!h) return 0;
-        if (h === b) return t;
-        if (h > b) return Math.round(t + (h - b) * (t / b));
         return Math.round(h * (t / b));
       }
 
@@ -2426,7 +2477,7 @@
           return;
         }
         const obj = calcObjetivo(horas);
-        preview.innerHTML = `<strong style="color:var(--accent);font-size:16px;font-family:'DM Mono',monospace">${obj}</strong> <span style="color:var(--muted)">interacciones objetivo para ${horas} horas trabajadas</span>`;
+        preview.innerHTML = `<strong style="color:var(--accent);font-size:16px;font-family:'DM Mono',monospace">${obj}</strong> <span style="color:var(--muted)">interacciones objetivo para ${horas} horas</span>`;
         updateSemanaCount();
       }
 
@@ -2447,19 +2498,21 @@
         }
         alertEl.classList.remove("hidden");
         if (count >= CFG.muestras_semana) {
-          alertEl.innerHTML = `⚠️ <strong>${agente}</strong> ya tiene <strong>${count} auditorías</strong> registradas esta semana (máximo recomendado: ${CFG.muestras_semana}). Podés continuar igual.`;
+          alertEl.innerHTML = `⚠️ <strong>${agente}</strong> ya tiene <strong>${count} auditorías</strong> esta semana (máximo: ${CFG.muestras_semana}).`;
           alertEl.style.background = "var(--red-bg)";
           alertEl.style.color = "var(--red)";
           alertEl.style.borderColor = "#fecaca";
         } else {
-          alertEl.innerHTML = `ℹ️ <strong>${agente}</strong> tiene <strong>${count} de ${CFG.muestras_semana}</strong> muestras de esta semana registradas.`;
+          alertEl.innerHTML = `ℹ️ <strong>${agente}</strong> tiene <strong>${count} de ${CFG.muestras_semana}</strong> muestras de esta semana.`;
           alertEl.style.background = "var(--accent-light)";
           alertEl.style.color = "var(--accent)";
           alertEl.style.borderColor = "#bfdbfe";
         }
       }
 
-      // ====== CRITERIOS ======
+      // ================================================================
+      // CRITERIOS
+      // ================================================================
       function renderCriterios() {
         ["comunicacion", "gestion"].forEach((bloque) => {
           const cont = document.getElementById("criterios-" + bloque);
@@ -2468,17 +2521,13 @@
             const row = document.createElement("div");
             row.className = "criteria-row";
             row.innerHTML = `
-        <div class="criteria-name">${c.nombre}</div>
-        <div class="criteria-peso">${c.peso}%</div>
-        <div class="radio-group">
-          <label class="radio-btn yes" id="btn-yes-${c.cod}">
-            <input type="radio" name="crit-${c.cod}" value="si" onchange="onCriterioChange('${c.cod}',${c.peso})"> Sí
-          </label>
-          <label class="radio-btn no" id="btn-no-${c.cod}">
-            <input type="radio" name="crit-${c.cod}" value="no" onchange="onCriterioChange('${c.cod}',0)"> No
-          </label>
-        </div>
-        <div class="criteria-score" id="cscore-${c.cod}" style="color:var(--hint)">—</div>`;
+            <div class="criteria-name">${c.nombre}</div>
+            <div class="criteria-peso">${c.peso}%</div>
+            <div class="radio-group">
+              <label class="radio-btn yes" id="btn-yes-${c.cod}"><input type="radio" name="crit-${c.cod}" value="si" onchange="onCriterioChange('${c.cod}',${c.peso})"> Sí</label>
+              <label class="radio-btn no"  id="btn-no-${c.cod}"><input type="radio" name="crit-${c.cod}" value="no" onchange="onCriterioChange('${c.cod}',0)"> No</label>
+            </div>
+            <div class="criteria-score" id="cscore-${c.cod}" style="color:var(--hint)">—</div>`;
             cont.appendChild(row);
           });
         });
@@ -2516,23 +2565,22 @@
           evaluados + "/" + all.length;
         document.getElementById("sc-pct").textContent = total + "%";
         const badge = document.getElementById("sc-badge");
-        if (evaluados === 0) {
+        if (!evaluados) {
           badge.innerHTML = "";
           return;
         }
         const UM = getUMBRALES();
-        if (total >= UM.excelente)
-          badge.innerHTML =
-            '<span class="score-badge badge-green">Excelente</span>';
-        else if (total >= UM.correcta)
-          badge.innerHTML =
-            '<span class="score-badge badge-amber">Correcta</span>';
-        else
-          badge.innerHTML =
-            '<span class="score-badge badge-red">Observada</span>';
+        badge.innerHTML =
+          total >= UM.excelente
+            ? '<span class="score-badge badge-green">Excelente</span>'
+            : total >= UM.correcta
+              ? '<span class="score-badge badge-amber">Correcta</span>'
+              : '<span class="score-badge badge-red">Observada</span>';
       }
 
-      // ====== PRODUCTIVIDAD ======
+      // ================================================================
+      // PRODUCTIVIDAD
+      // ================================================================
       function renderProdBanner() {
         const horas = document.getElementById("f-horas").value;
         const obj = calcObjetivo(horas);
@@ -2541,6 +2589,8 @@
         document.getElementById("prod-objetivo-val").textContent =
           "Objetivo: " + (obj || "—") + " interacciones";
         document.getElementById("obj-inter").textContent = obj || "—";
+        document.getElementById("obj-tarde").textContent = CFG.obj_puntual;
+        document.getElementById("obj-faltas").textContent = CFG.obj_present;
         calcProd();
       }
 
@@ -2550,7 +2600,6 @@
         const inter = Number(document.getElementById("p-inter").value) || 0;
         const tarde = Number(document.getElementById("p-tarde").value) || 0;
         const faltas = Number(document.getElementById("p-faltas").value) || 0;
-
         const PROD = getPROD();
         const pctInter =
           obj > 0 ? Math.min(100, Math.round((inter / obj) * 100)) : 0;
@@ -2568,22 +2617,22 @@
             pctPresent * PROD.w_present) /
             100,
         );
-
         const color = (v) =>
           v >= 80 ? "var(--green)" : v >= 60 ? "var(--amber)" : "var(--red)";
-        document.getElementById("pct-inter").textContent = pctInter + "%";
-        document.getElementById("pct-inter").style.color = color(pctInter);
-        document.getElementById("pct-puntual").textContent = pctPuntual + "%";
-        document.getElementById("pct-puntual").style.color = color(pctPuntual);
-        document.getElementById("pct-present").textContent = pctPresent + "%";
-        document.getElementById("pct-present").style.color = color(pctPresent);
+        ["pct-inter", "pct-puntual", "pct-present"].forEach((id, i) => {
+          const v = [pctInter, pctPuntual, pctPresent][i];
+          document.getElementById(id).textContent = v + "%";
+          document.getElementById(id).style.color = color(v);
+        });
         document.getElementById("pp-inter").textContent = pctInter + "%";
         document.getElementById("pp-asist").textContent =
           Math.round((pctPuntual + pctPresent) / 2) + "%";
         document.getElementById("pp-total").textContent = total + "%";
       }
 
-      // ====== GETTERS ======
+      // ================================================================
+      // HELPERS DE FORMULARIO
+      // ================================================================
       function v(id) {
         const el = document.getElementById(id);
         return el ? el.value : "";
@@ -2627,7 +2676,9 @@
         });
       }
 
-      // ====== RESUMEN ======
+      // ================================================================
+      // RESUMEN
+      // ================================================================
       function renderResumen() {
         const cal = getCalidad(),
           prod = getProd();
@@ -2647,33 +2698,33 @@
               : "badge-red";
         const horas = v("f-horas"),
           obj = calcObjetivo(horas);
-
-        const sheetsLine = SHEETS_URL
+        const sheetsLine = CFG.sheets_url
           ? `<span style="color:var(--green);font-size:12px">✓ Se enviará a Google Sheets automáticamente</span>`
-          : `<span style="color:var(--amber);font-size:12px">⚠ Google Sheets no configurado — solo se guardará localmente</span>`;
-
+          : `<span style="color:var(--amber);font-size:12px">⚠ Sheets no configurado — solo guardado local</span>`;
         document.getElementById("resumen-content").innerHTML = `
-  <div class="score-summary" style="margin-bottom:16px">
-    <div class="score-item"><div class="score-item-value" style="color:var(--accent)">${cal}%</div><div class="score-item-label">Calidad</div></div>
-    <div class="score-item"><div class="score-item-value" style="color:var(--teal)">${prod}%</div><div class="score-item-label">Productividad</div></div>
-    <div class="score-item"><div class="score-item-value" style="color:var(--green)">${general}%</div><div class="score-item-label">Promedio General</div><div><span class="score-badge ${bc}">${estado}</span></div></div>
-  </div>
-  <div class="form-grid" style="font-size:13px;margin-bottom:16px;gap:10px">
-    <div><span style="color:var(--muted)">Agente</span><br/><strong>${v("f-agente")}</strong></div>
-    <div><span style="color:var(--muted)">Ticket</span><br/><strong>${v("f-ticket")}</strong></div>
-    <div><span style="color:var(--muted)">Canal</span><br/><strong>${v("f-canal")}</strong></div>
-    <div><span style="color:var(--muted)">Tipo</span><br/><strong>${v("f-tipo")}</strong></div>
-    <div><span style="color:var(--muted)">Horas trabajadas</span><br/><strong>${horas} hs → obj. ${obj} interacciones</strong></div>
-    <div><span style="color:var(--muted)">Auditor</span><br/><strong>${v("f-auditor")}</strong></div>
-    <div><span style="color:var(--muted)">Fecha</span><br/><strong>${v("f-fecha")}</strong></div>
-    <div><span style="color:var(--muted)">Semana</span><br/><strong>${v("f-semana")}</strong></div>
-  </div>
-  ${v("f-obs-general") ? `<div class="alert info" style="margin-bottom:8px"><strong>Obs:</strong> ${v("f-obs-general")}</div>` : ""}
-  ${v("f-obs-accion") ? `<div class="alert warning" style="margin-bottom:8px"><strong>Acción:</strong> ${v("f-obs-accion")}</div>` : ""}
-  <div style="margin-top:8px">${sheetsLine}</div>`;
+        <div class="score-summary" style="margin-bottom:16px">
+          <div class="score-item"><div class="score-item-value" style="color:var(--accent)">${cal}%</div><div class="score-item-label">Calidad</div></div>
+          <div class="score-item"><div class="score-item-value" style="color:var(--teal)">${prod}%</div><div class="score-item-label">Productividad</div></div>
+          <div class="score-item"><div class="score-item-value" style="color:var(--green)">${general}%</div><div class="score-item-label">Promedio General</div><div><span class="score-badge ${bc}">${estado}</span></div></div>
+        </div>
+        <div class="form-grid" style="font-size:13px;margin-bottom:16px;gap:10px">
+          <div><span style="color:var(--muted)">Agente</span><br/><strong>${v("f-agente")}</strong></div>
+          <div><span style="color:var(--muted)">Ticket</span><br/><strong>${v("f-ticket")}</strong></div>
+          <div><span style="color:var(--muted)">Canal</span><br/><strong>${v("f-canal")}</strong></div>
+          <div><span style="color:var(--muted)">Tipo</span><br/><strong>${v("f-tipo")}</strong></div>
+          <div><span style="color:var(--muted)">Horas</span><br/><strong>${horas}hs → obj. ${obj} interacciones</strong></div>
+          <div><span style="color:var(--muted)">Auditor</span><br/><strong>${v("f-auditor")}</strong></div>
+          <div><span style="color:var(--muted)">Fecha</span><br/><strong>${v("f-fecha")}</strong></div>
+          <div><span style="color:var(--muted)">Semana</span><br/><strong>${v("f-semana")}</strong></div>
+        </div>
+        ${v("f-obs-general") ? `<div class="alert info" style="margin-bottom:8px"><strong>Obs:</strong> ${v("f-obs-general")}</div>` : ""}
+        ${v("f-obs-accion") ? `<div class="alert warning" style="margin-bottom:8px"><strong>Acción:</strong> ${v("f-obs-accion")}</div>` : ""}
+        <div style="margin-top:8px">${sheetsLine}</div>`;
       }
 
-      // ====== SUBMIT ======
+      // ================================================================
+      // SUBMIT
+      // ================================================================
       async function submitAuditoria() {
         const btn = document.getElementById("btn-submit");
         btn.disabled = true;
@@ -2689,11 +2740,12 @@
             : general >= UM.correcta
               ? "Correcta"
               : "Observada";
-        const horas = v("f-horas");
-        const obj = calcObjetivo(horas);
+        const horas = v("f-horas"),
+          obj = calcObjetivo(horas);
 
         const id = "AUD-" + String(DB.nextId).padStart(4, "0");
         DB.nextId++;
+        persistNextId();
 
         const aud = {
           id,
@@ -2729,33 +2781,24 @@
 
         DB.auditorias.push(aud);
 
-        // Send to Sheets
-        let sheetsOk = false;
-        if (SHEETS_URL) {
-          document.getElementById("sheets-send-status").textContent =
-            "Enviando a Google Sheets...";
-          const result = await sendToSheets(buildSheetsPayload(aud));
-          sheetsOk = result.ok;
-          aud.sheets_enviado = sheetsOk;
-          document.getElementById("sheets-send-status").textContent = "";
-        }
+        // Enviar a Sheets
+        const payload = buildSheetsPayload(aud);
+        const result = await sendToSheets(payload);
+        aud.sheets_enviado = result.ok;
 
-        // Alert
         const alertEl = document.getElementById("form-alert");
         alertEl.className = "alert success";
-        alertEl.textContent = `✓ Auditoría ${id} registrada${sheetsOk ? " y enviada a Google Sheets" : SHEETS_URL ? " (error al enviar a Sheets, guardada localmente)" : " localmente (Sheets no configurado)"}.`;
+        alertEl.textContent = `✓ Auditoría ${id} registrada${result.ok ? " y enviada a Google Sheets" : " localmente (error al enviar a Sheets)"}.`;
         alertEl.classList.remove("hidden");
         setTimeout(() => alertEl.classList.add("hidden"), 6000);
 
-        // Reset
         resetForm();
         btn.disabled = false;
         btn.textContent = "✓ Registrar y enviar a Sheets";
       }
 
       function buildSheetsPayload(aud) {
-        // Flat object for easy mapping in Apps Script
-        const flat = {
+        return {
           id_auditoria: aud.id,
           fecha_registro: aud.fecha_registro,
           fecha_auditoria: aud.fecha_auditoria,
@@ -2781,13 +2824,8 @@
           obs_desvios: aud.obs_desvios,
           obs_accion: aud.obs_accion,
           resp_seguimiento: aud.resp_seguimiento,
+          criterios: aud.criterios,
         };
-        // Add criterio columns
-        aud.criterios.forEach((c) => {
-          flat["crit_" + c.cod] = c.cumple;
-          flat["peso_" + c.cod] = c.obtenido;
-        });
-        return flat;
       }
 
       function resetForm() {
@@ -2818,7 +2856,6 @@
         document.getElementById("f-fecha").value = new Date()
           .toISOString()
           .slice(0, 10);
-        const m = new Date().getMonth();
         const meses = [
           "Enero",
           "Febrero",
@@ -2833,10 +2870,12 @@
           "Noviembre",
           "Diciembre",
         ];
-        document.getElementById("f-mes").value = meses[m];
+        document.getElementById("f-mes").value = meses[new Date().getMonth()];
       }
 
-      // ====== DASHBOARD ======
+      // ================================================================
+      // DASHBOARD
+      // ================================================================
       let chartA = null,
         chartE = null,
         chartS = null;
@@ -2856,25 +2895,21 @@
             '<p style="color:var(--hint);font-size:13px;padding:8px 0">Sin datos.</p>';
           return;
         }
-        const avgCal = Math.round(
-          data.reduce((s, a) => s + a.calidad, 0) / data.length,
-        );
-        const avgProd = Math.round(
-          data.reduce((s, a) => s + a.productividad, 0) / data.length,
-        );
-        const avgGen = Math.round(
-          data.reduce((s, a) => s + a.general, 0) / data.length,
-        );
-        document.getElementById("m-calidad").textContent = avgCal + "%";
-        document.getElementById("m-prod").textContent = avgProd + "%";
+        const avg = (arr) =>
+          Math.round(arr.reduce((s, a) => s + a, 0) / arr.length);
+        document.getElementById("m-calidad").textContent =
+          avg(data.map((a) => a.calidad)) + "%";
+        document.getElementById("m-prod").textContent =
+          avg(data.map((a) => a.productividad)) + "%";
+        const avgGen = avg(data.map((a) => a.general));
         const mEl = document.getElementById("m-general");
         mEl.textContent = avgGen + "%";
-        const UM3 = getUMBRALES();
+        const UM = getUMBRALES();
         mEl.className =
           "metric-value " +
-          (avgGen >= UM3.excelente
+          (avgGen >= UM.excelente
             ? "green"
-            : avgGen >= UM3.correcta
+            : avgGen >= UM.correcta
               ? ""
               : "red");
 
@@ -3025,31 +3060,24 @@
           .map(([n, count]) => {
             const pct = Math.round((count / data.length) * 100);
             return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-      <div style="flex:1;font-size:12px">${n}</div>
-      <div class="mini-bar" style="width:80px"><div class="mini-bar-fill" style="width:${pct}%;background:var(--red)"></div></div>
-      <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--red);min-width:28px;text-align:right">${pct}%</div>
-    </div>`;
+          <div style="flex:1;font-size:12px">${n}</div>
+          <div class="mini-bar" style="width:80px"><div class="mini-bar-fill" style="width:${pct}%;background:var(--red)"></div></div>
+          <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--red);min-width:28px;text-align:right">${pct}%</div>
+        </div>`;
           })
           .join("");
       }
 
-      // ====== REGISTROS ======
+      // ================================================================
+      // REGISTROS
+      // ================================================================
       function renderRegistros() {
         const search = document
           .getElementById("filter-search")
           .value.toLowerCase();
         const estado = document.getElementById("filter-estado").value;
         const agenteF = document.getElementById("filter-agente").value;
-        const sel = document.getElementById("filter-agente");
-        const curr = sel.value;
-        const agentes = [
-          ...new Set([...CFG.agentes, ...DB.auditorias.map((a) => a.agente)]),
-        ];
-        sel.innerHTML =
-          '<option value="">Todos los agentes</option>' +
-          agentes
-            .map((a) => `<option${a === curr ? " selected" : ""}>${a}</option>`)
-            .join("");
+        const mesF = document.getElementById("filter-mes").value;
 
         const data = DB.auditorias.filter((a) => {
           if (
@@ -3060,34 +3088,42 @@
             return false;
           if (estado && a.estado !== estado) return false;
           if (agenteF && a.agente !== agenteF) return false;
+          if (mesF && a.mes !== mesF) return false;
           return true;
         });
+
+        document.getElementById("registros-count").textContent =
+          `Mostrando ${data.length} de ${DB.auditorias.length} registros`;
+
         const tbody = document.getElementById("tbody-registros");
         if (!data.length) {
           tbody.innerHTML =
-            '<tr><td colspan="11" style="text-align:center;color:var(--hint);padding:24px">Sin registros.</td></tr>';
+            '<tr><td colspan="12" style="text-align:center;color:var(--hint);padding:24px">Sin registros.</td></tr>';
           return;
         }
         tbody.innerHTML = data
           .map(
             (a) => `<tr>
-    <td><span style="font-family:'DM Mono',monospace;font-size:11px">${a.id}</span></td>
-    <td>${a.fecha_auditoria}</td>
-    <td>${a.agente}</td>
-    <td>${a.ticket}</td>
-    <td>${a.canal}</td>
-    <td><span style="font-family:'DM Mono',monospace">${a.horas_trabajadas}hs</span></td>
-    <td><span style="font-family:'DM Mono',monospace">${a.calidad}%</span></td>
-    <td><span style="font-family:'DM Mono',monospace">${a.productividad}%</span></td>
-    <td><span style="font-family:'DM Mono',monospace;font-weight:600">${a.general}%</span></td>
-    <td><span class="badge badge-${a.estado.toLowerCase()}">${a.estado}</span></td>
-    <td>${a.sheets_enviado ? '<span class="badge badge-ok">✓ Sheets</span>' : '<span class="badge badge-err">Local</span>'}</td>
-  </tr>`,
+        <td><span style="font-family:'DM Mono',monospace;font-size:11px">${a.id_auditoria}</span></td>
+        <td>${a.fecha_auditoria}</td>
+        <td>${a.agente}</td>
+        <td>${a.ticket}</td>
+        <td>${a.canal}</td>
+        <td><span style="font-family:'DM Mono',monospace">${a.horas_trabajadas}hs</span></td>
+        <td><span style="font-family:'DM Mono',monospace">${a.calidad}%</span></td>
+        <td><span style="font-family:'DM Mono',monospace">${a.productividad}%</span></td>
+        <td><span style="font-family:'DM Mono',monospace;font-weight:600">${a.general}%</span></td>
+        <td><span class="badge badge-${a.estado.toLowerCase()}">${a.estado}</span></td>
+        <td>${a.sheets_enviado ? '<span class="badge badge-ok">✓</span>' : '<span class="badge badge-err">Local</span>'}</td>
+        <td><button class="btn sm danger" onclick="deleteAuditoria('${a.id_auditoria}')" style="padding:3px 8px;font-size:11px">✕</button></td>
+      </tr>`,
           )
           .join("");
       }
 
-      // ====== OBSERVACIONES ======
+      // ================================================================
+      // OBSERVACIONES
+      // ================================================================
       function renderObservaciones() {
         const data = DB.auditorias.filter((a) => a.obs_general || a.obs_accion);
         const tbody = document.getElementById("tbody-obs");
@@ -3099,17 +3135,19 @@
         tbody.innerHTML = data
           .map(
             (a) => `<tr>
-    <td><span style="font-family:'DM Mono',monospace;font-size:11px">${a.id}</span></td>
-    <td>${a.agente}</td><td>${a.ticket}</td>
-    <td style="font-size:12px;max-width:200px">${a.obs_general || "—"}</td>
-    <td style="font-size:12px;max-width:200px">${a.obs_accion || "—"}</td>
-    <td><span class="obs-chip ${a.requiere_seguimiento === "Sí" ? "chip-pendiente" : "chip-no"}">${a.requiere_seguimiento === "Sí" ? "Pendiente" : "No"}</span></td>
-  </tr>`,
+        <td><span style="font-family:'DM Mono',monospace;font-size:11px">${a.id_auditoria}</span></td>
+        <td>${a.agente}</td><td>${a.ticket}</td>
+        <td style="font-size:12px;max-width:200px">${a.obs_general || "—"}</td>
+        <td style="font-size:12px;max-width:200px">${a.obs_accion || "—"}</td>
+        <td><span class="obs-chip ${a.requiere_seguimiento === "Sí" ? "chip-pendiente" : "chip-no"}">${a.requiere_seguimiento === "Sí" ? "Pendiente" : "No"}</span></td>
+      </tr>`,
           )
           .join("");
       }
 
-      // ====== AGENTES ======
+      // ================================================================
+      // AGENTES
+      // ================================================================
       function renderAgentes() {
         const agents = {};
         DB.auditorias.forEach((a) => {
@@ -3131,7 +3169,6 @@
             count: d.count,
           }))
           .sort((a, b) => b.gen - a.gen);
-
         const cont = document.getElementById("agent-ranking");
         if (!sorted.length) {
           cont.innerHTML =
@@ -3140,11 +3177,11 @@
         }
         cont.innerHTML = sorted
           .map((a, i) => {
-            const UM4 = getUMBRALES();
+            const UM = getUMBRALES();
             const col =
-              a.gen >= UM4.excelente
+              a.gen >= UM.excelente
                 ? "var(--green)"
-                : a.gen >= UM4.correcta
+                : a.gen >= UM.correcta
                   ? "var(--accent)"
                   : "var(--red)";
             const init = a.ag
@@ -3154,17 +3191,16 @@
               .slice(0, 2)
               .toUpperCase();
             return `<div class="agent-row">
-      <div style="font-size:12px;font-weight:600;color:var(--hint);width:18px">${i + 1}</div>
-      <div class="avatar">${init}</div>
-      <div style="flex:1"><div style="font-size:13px;font-weight:500">${a.ag}</div>
-        <div style="font-size:11px;color:var(--muted)">${a.count} auditoría${a.count !== 1 ? "s" : ""} · Cal ${a.cal}% · Prod ${a.prod}%</div>
-      </div>
-      <div class="mini-bar" style="width:60px"><div class="mini-bar-fill" style="width:${a.gen}%;background:${col}"></div></div>
-      <div style="font-size:13px;font-family:'DM Mono',monospace;font-weight:600;color:${col};min-width:36px;text-align:right">${a.gen}%</div>
-    </div>`;
+          <div style="font-size:12px;font-weight:600;color:var(--hint);width:18px">${i + 1}</div>
+          <div class="avatar">${init}</div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:500">${a.ag}</div>
+            <div style="font-size:11px;color:var(--muted)">${a.count} auditoría${a.count !== 1 ? "s" : ""} · Cal ${a.cal}% · Prod ${a.prod}%</div>
+          </div>
+          <div class="mini-bar" style="width:60px"><div class="mini-bar-fill" style="width:${a.gen}%;background:${col}"></div></div>
+          <div style="font-size:13px;font-family:'DM Mono',monospace;font-weight:600;color:${col};min-width:36px;text-align:right">${a.gen}%</div>
+        </div>`;
           })
           .join("");
-
         const sel = document.getElementById("sel-agente-detail");
         sel.innerHTML =
           '<option value="">— Seleccionar agente —</option>' +
@@ -3198,7 +3234,7 @@
           `<p style="font-size:12px;color:var(--muted);margin-bottom:10px">${auds.length} auditoría${auds.length !== 1 ? "s" : ""} registradas</p>` +
           sorted
             .map(([n, d]) => {
-              const pct = Math.round((d.no / d.total) * 100);
+              const pct = d.total > 0 ? Math.round((d.no / d.total) * 100) : 0;
               const col =
                 pct > 50
                   ? "var(--red)"
@@ -3206,15 +3242,17 @@
                     ? "var(--amber)"
                     : "var(--green)";
               return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
-        <div style="flex:1;font-size:11px">${n}</div>
-        <div class="mini-bar" style="width:60px"><div class="mini-bar-fill" style="width:${pct}%;background:${col}"></div></div>
-        <div style="font-size:11px;font-family:'DM Mono',monospace;color:${col};min-width:28px;text-align:right">${pct}%</div>
-      </div>`;
+            <div style="flex:1;font-size:11px">${n}</div>
+            <div class="mini-bar" style="width:60px"><div class="mini-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+            <div style="font-size:11px;font-family:'DM Mono',monospace;color:${col};min-width:28px;text-align:right">${pct}%</div>
+          </div>`;
             })
             .join("");
       }
 
-      // ====== EXPORT CSV ======
+      // ================================================================
+      // EXPORT CSV
+      // ================================================================
       function exportCSV() {
         if (!DB.auditorias.length) {
           alert("No hay datos.");
@@ -3249,7 +3287,9 @@
             const val = a[h] ?? "";
             return typeof val === "string" && val.includes(",")
               ? '"' + val.replace(/"/g, "'") + '"'
-              : val;
+              : String(val).includes(",")
+                ? `"${val}"`
+                : val;
           }),
         );
         const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
@@ -3261,10 +3301,14 @@
         link.click();
       }
 
-      // ====== INIT ======
+      // ================================================================
+      // INIT
+      // ================================================================
       (function init() {
-        const today = new Date().toISOString().slice(0, 10);
-        document.getElementById("f-fecha").value = today;
+        loadLocalCfg();
+        document.getElementById("f-fecha").value = new Date()
+          .toISOString()
+          .slice(0, 10);
         const meses = [
           "Enero",
           "Febrero",
@@ -3280,173 +3324,9 @@
           "Diciembre",
         ];
         document.getElementById("f-mes").value = meses[new Date().getMonth()];
-        SHEETS_URL = CFG.sheets_url;
         populateSelects();
-        updateSheetsUI();
-        // Cargar config desde Sheets como fuente de verdad
-        loadConfigFromSheets();
-
-        // Demo data
-        const DEMO_C = [...CRITERIOS.comunicacion, ...CRITERIOS.gestion].map(
-          (c) => ({
-            ...c,
-            bloque: CRITERIOS.comunicacion.find((x) => x.cod === c.cod)
-              ? "Comunicación"
-              : "Gestión",
-            cumple: "Sí",
-            obtenido: c.peso,
-          }),
-        );
-        const demo = [
-          {
-            agente: "Agostina Moya",
-            ticket: "5093240",
-            canal: "WhatsApp",
-            tipo: "Consulta",
-            horas: 44,
-            cal: 91,
-            inter: 600,
-            tarde: 0,
-            faltas: 0,
-          },
-          {
-            agente: "Rodrigo Arrieta",
-            ticket: "5091442",
-            canal: "WhatsApp",
-            tipo: "Reclamo",
-            horas: 44,
-            cal: 96,
-            inter: 720,
-            tarde: 0,
-            faltas: 0,
-          },
-          {
-            agente: "Luciana Zurita",
-            ticket: "5086119",
-            canal: "Mail",
-            tipo: "Consulta",
-            horas: 32,
-            cal: 100,
-            inter: 350,
-            tarde: 2,
-            faltas: 0,
-          },
-          {
-            agente: "Lucas Veliz",
-            ticket: "5088086",
-            canal: "WhatsApp",
-            tipo: "Reclamo",
-            horas: 44,
-            cal: 70,
-            inter: 490,
-            tarde: 1,
-            faltas: 1,
-          },
-          {
-            agente: "Julieta Gallardo",
-            ticket: "5085712",
-            canal: "Teléfono",
-            tipo: "Reclamo",
-            horas: 40,
-            cal: 72,
-            inter: 610,
-            tarde: 0,
-            faltas: 0,
-          },
-          {
-            agente: "Tania Cazorla",
-            ticket: "5056801",
-            canal: "WhatsApp",
-            tipo: "Consulta",
-            horas: 44,
-            cal: 98,
-            inter: 640,
-            tarde: 1,
-            faltas: 0,
-          },
-          {
-            agente: "Santiago Jerez",
-            ticket: "5025458",
-            canal: "Teléfono",
-            tipo: "Reclamo",
-            horas: 44,
-            cal: 86,
-            inter: 680,
-            tarde: 2,
-            faltas: 0,
-          },
-          {
-            agente: "Rodrigo Bacchi",
-            ticket: "5024992",
-            canal: "Mail",
-            tipo: "Seguimiento",
-            horas: 44,
-            cal: 78,
-            inter: 390,
-            tarde: 3,
-            faltas: 0,
-          },
-        ];
-        demo.forEach((d, i) => {
-          const obj = calcObjetivo(d.horas);
-          const pctInter = Math.min(100, Math.round((d.inter / obj) * 100));
-          const pctPuntual = Math.min(
-            100,
-            Math.round(((6 - d.tarde) / 6) * 100),
-          );
-          const pctPresent = Math.min(
-            100,
-            Math.round(((6 - d.faltas) / 6) * 100),
-          );
-          const prod = Math.round(
-            (pctInter * 60 + pctPuntual * 20 + pctPresent * 20) / 100,
-          );
-          const gen = Math.round((d.cal + prod) / 2);
-          const UM5 = getUMBRALES();
-          const estado =
-            gen >= UM5.excelente
-              ? "Excelente"
-              : gen >= UM5.correcta
-                ? "Correcta"
-                : "Observada";
-          DB.auditorias.push({
-            id: "AUD-" + String(DB.nextId++).padStart(4, "0"),
-            id_auditoria: "AUD-" + String(i + 1).padStart(4, "0"),
-            fecha_registro: new Date().toISOString(),
-            fecha_auditoria: "2026-04-" + String(14 + i).padStart(2, "0"),
-            anio: 2026,
-            mes: "Abril",
-            semana: "16",
-            auditor: "Gabriel",
-            agente: d.agente,
-            ticket: d.ticket,
-            canal: d.canal,
-            tipo: d.tipo,
-            horas_trabajadas: d.horas,
-            objetivo_interacciones: obj,
-            interacciones_reales: d.inter,
-            dias_tarde: d.tarde,
-            dias_faltas: d.faltas,
-            calidad: d.cal,
-            productividad: prod,
-            general: gen,
-            estado,
-            requiere_seguimiento: estado === "Observada" ? "Sí" : "No",
-            obs_general:
-              estado === "Observada"
-                ? "Se detectaron desvíos en criterios de gestión."
-                : "",
-            obs_desvios: "",
-            obs_accion:
-              estado === "Observada"
-                ? "Reforzar protocolo de resolución en primer contacto."
-                : "",
-            resp_seguimiento: estado === "Observada" ? "Gabriel" : "",
-            criterios: DEMO_C,
-            sheets_enviado: false,
-          });
-        });
-        renderDashboard();
+        // Carga real desde Sheets — esto reemplaza todos los datos en memoria
+        reloadFromSheets();
       })();
     </script>
   </body>
