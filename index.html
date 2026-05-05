@@ -69,13 +69,16 @@ function addAgente(){
   persistConfig();
   populateSelects();
   renderListaAgentes();
+  syncConfigToSheets('agente_agregado', {agente: val});
 }
 
 function removeAgente(i){
+  const nombre = CFG.agentes[i];
   CFG.agentes.splice(i,1);
   persistConfig();
   populateSelects();
   renderListaAgentes();
+  syncConfigToSheets('agente_eliminado', {agente: nombre});
 }
 
 function addAuditor(){
@@ -88,13 +91,16 @@ function addAuditor(){
   persistConfig();
   populateSelects();
   renderListaAuditores();
+  syncConfigToSheets('auditor_agregado', {auditor: val});
 }
 
 function removeAuditor(i){
+  const nombre = CFG.auditores[i];
   CFG.auditores.splice(i,1);
   persistConfig();
   populateSelects();
   renderListaAuditores();
+  syncConfigToSheets('auditor_eliminado', {auditor: nombre});
 }
 
 function saveConfigSheets(){
@@ -139,6 +145,13 @@ function saveConfig(){
   const wpr=Number(document.getElementById('cfg-w-present').value);
   if(wi+wp+wpr!==100){ alert('Los pesos de productividad deben sumar exactamente 100%.'); return; }
 
+  const anterior = {
+    horas_base: CFG.horas_base, tickets_base: CFG.tickets_base,
+    muestras_semana: CFG.muestras_semana, w_inter: CFG.w_inter,
+    w_puntual: CFG.w_puntual, w_present: CFG.w_present,
+    u_excelente: CFG.u_excelente, u_correcta: CFG.u_correcta, obj_puntual: CFG.obj_puntual
+  };
+
   saveConfigSheets();
   CFG.horas_base = Number(document.getElementById('cfg-horas-base').value) || 44;
   CFG.tickets_base = Number(document.getElementById('cfg-tickets-base').value) || 660;
@@ -150,6 +163,20 @@ function saveConfig(){
   CFG.obj_present = CFG.obj_puntual;
   persistConfig();
   populateSelects();
+
+  // Detectar cambios y sincronizar
+  const nuevo = {
+    horas_base: CFG.horas_base, tickets_base: CFG.tickets_base,
+    muestras_semana: CFG.muestras_semana, w_inter: CFG.w_inter,
+    w_puntual: CFG.w_puntual, w_present: CFG.w_present,
+    u_excelente: CFG.u_excelente, u_correcta: CFG.u_correcta, obj_puntual: CFG.obj_puntual
+  };
+  const cambios = Object.keys(nuevo).filter(k => anterior[k] !== nuevo[k]);
+  if(cambios.length){
+    const detalle = cambios.map(k=>`${k}: ${anterior[k]} → ${nuevo[k]}`).join(', ');
+    syncConfigToSheets('parametros_actualizados', { cambios: detalle, valores: nuevo });
+  }
+
   const el = document.getElementById('config-saved');
   el.classList.remove('hidden');
   setTimeout(()=>el.classList.add('hidden'), 3000);
@@ -722,10 +749,13 @@ tr:hover td{background:var(--surface)}
 <div id="page-configuracion" class="page">
   <div class="topbar">
     <div><h2>Configuración</h2><p>Agentes, auditores, conexión y parámetros del sistema</p></div>
-    <button class="btn primary sm" onclick="saveConfig()">✓ Guardar cambios</button>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span id="cfg-sync-badge"></span>
+      <button class="btn primary sm" onclick="saveConfig()">✓ Guardar cambios</button>
+    </div>
   </div>
 
-  <div id="config-saved" class="alert success hidden">Configuración guardada correctamente.</div>
+  <div id="config-saved" class="alert success hidden">✓ Configuración guardada y sincronizada con Google Sheets.</div>
 
   <!-- SHEETS -->
   <div class="card" style="margin-bottom:16px">
@@ -816,6 +846,43 @@ function loadConfig(){
 function persistConfig(){ localStorage.setItem(CONFIG_KEY, JSON.stringify(CFG)); }
 let CFG = loadConfig();
 let SHEETS_URL = CFG.sheets_url;
+
+// ====== SYNC CONFIG → SHEETS ======
+async function syncConfigToSheets(accion, detalle){
+  if(!SHEETS_URL) return;
+  const payload = {
+    _type: 'config_change',
+    accion,
+    timestamp: new Date().toISOString(),
+    agentes: CFG.agentes,
+    auditores: CFG.auditores,
+    parametros: {
+      horas_base: CFG.horas_base,
+      tickets_base: CFG.tickets_base,
+      muestras_semana: CFG.muestras_semana,
+      w_inter: CFG.w_inter,
+      w_puntual: CFG.w_puntual,
+      w_present: CFG.w_present,
+      u_excelente: CFG.u_excelente,
+      u_correcta: CFG.u_correcta,
+      obj_puntual: CFG.obj_puntual
+    },
+    detalle
+  };
+  try {
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const badge = document.getElementById('cfg-sync-badge');
+    if(badge) badge.innerHTML = '<span class="badge badge-excelente">✓ Sincronizado ' + new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'}) + '</span>';
+  } catch(e) {
+    const badge = document.getElementById('cfg-sync-badge');
+    if(badge) badge.innerHTML = '<span class="badge badge-observada">⚠ Sin sincronizar</span>';
+  }
+}
 
 // ====== CRITERIOS ======
 const CRITERIOS = {
