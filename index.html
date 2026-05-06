@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AuditCS | Customer Service v10</title>
+  <title>AuditCS | Customer Service v11</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <style>
@@ -186,6 +186,49 @@
     /* Cola offline */
     .offline-badge{display:none;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-mid);border-radius:20px;font-size:11px;font-weight:600;padding:2px 10px;margin-left:8px}
     .offline-badge.show{display:inline-block}
+    /* Dashboard filtros globales */
+    .dash-filters{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r)}
+    .dash-filters select,.dash-filters input{width:auto;flex:1;min-width:110px;max-width:180px;font-size:12px;padding:6px 10px}
+    .dash-filters label{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+    .filter-reset{font-size:11px;color:var(--accent);cursor:pointer;white-space:nowrap;background:none;border:none;font-family:inherit;padding:0}
+    .filter-reset:hover{text-decoration:underline}
+    /* Heatmap agente x semana */
+    .heatmap-wrap{overflow-x:auto;margin-top:4px}
+    .heatmap-table{border-collapse:collapse;font-size:11px;min-width:100%}
+    .heatmap-table th{background:var(--surface);padding:5px 8px;font-size:10px;font-weight:600;color:var(--muted);text-align:center;border:1px solid var(--border);white-space:nowrap}
+    .heatmap-table th.agent-col{text-align:left;min-width:130px}
+    .heatmap-table td{padding:5px 8px;border:1px solid var(--border);text-align:center;font-family:"DM Mono",monospace;font-size:11px;font-weight:600;cursor:default;transition:opacity .1s}
+    .heatmap-table td:hover{opacity:.8}
+    .heatmap-table td.agent-name{text-align:left;font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;color:var(--ink);background:var(--surface)}
+    .hm-excelente{background:#f0fdf4;color:#15803d}
+    .hm-correcta{background:#eff6ff;color:#1d4ed8}
+    .hm-observada{background:#fef2f2;color:#dc2626}
+    .hm-empty{background:var(--surface);color:var(--hint)}
+    /* Desvio row mejorado */
+    .desvio-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+    .desvio-row:last-child{border-bottom:none}
+    .desvio-name{flex:1;font-size:12px;line-height:1.3}
+    .desvio-bloque{font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;text-transform:uppercase;margin-right:4px;white-space:nowrap}
+    .bloque-com{background:var(--accent-light);color:var(--accent)}
+    .bloque-ges{background:var(--teal-bg);color:var(--teal)}
+    /* Observaciones mejoradas */
+    .obs-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;border-left:3px solid var(--border2)}
+    .obs-card.low-score{border-left-color:var(--red)}
+    .obs-card.mid-score{border-left-color:var(--amber)}
+    .obs-card.ok-score{border-left-color:var(--green)}
+    .obs-meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;font-size:11px;color:var(--muted)}
+    .obs-meta strong{color:var(--ink);font-weight:600}
+    .obs-text{font-size:12px;color:var(--ink);line-height:1.6}
+    /* Score cell coloreado inline */
+    .score-cell{display:inline-block;padding:2px 8px;border-radius:4px;font-family:"DM Mono",monospace;font-size:12px;font-weight:700}
+    .sc-green{background:var(--green-bg);color:var(--green)}
+    .sc-amber{background:var(--amber-bg);color:var(--amber)}
+    .sc-red{background:var(--red-bg);color:var(--red)}
+    /* Tendencia chip */
+    .tend-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:600}
+    .tend-up{background:var(--green-bg);color:var(--green)}
+    .tend-down{background:var(--red-bg);color:var(--red)}
+    .tend-flat{background:var(--surface);color:var(--muted)}
   </style>
 </head>
 <body>
@@ -205,7 +248,7 @@
   <aside class="sidebar">
     <div class="logo-area">
       <h1>AuditCS</h1>
-      <span>Customer Service · v10.0</span>
+      <span>Customer Service · v11.0</span>
     </div>
     <nav class="nav">
       <div class="nav-section">Reportes</div>
@@ -259,31 +302,80 @@
           <button class="btn primary sm" onclick="showPage('formulario')">+ Nueva Auditoría</button>
         </div>
       </div>
-      <div class="metrics">
-        <div class="metric"><div class="metric-label">Total Auditorías</div><div class="metric-value" id="m-total">0</div><div class="metric-sub">registradas</div></div>
-        <div class="metric"><div class="metric-label">Promedio Calidad</div><div class="metric-value" id="m-calidad">—</div><div class="metric-sub">% del equipo</div></div>
-        <div class="metric"><div class="metric-label">Promedio Productividad</div><div class="metric-value" id="m-prod">—</div><div class="metric-sub">% del equipo</div></div>
-        <div class="metric"><div class="metric-label">Promedio General</div><div class="metric-value" id="m-general">—</div><div class="metric-sub">score ponderado</div></div>
+
+      <!-- FILTROS GLOBALES DEL DASHBOARD -->
+      <div class="dash-filters">
+        <label>Filtrar:</label>
+        <select id="df-agente" onchange="renderDashboard()"><option value="">Todos los agentes</option></select>
+        <select id="df-mes" onchange="renderDashboard()">
+          <option value="">Todos los meses</option>
+          <option>Enero</option><option>Febrero</option><option>Marzo</option>
+          <option>Abril</option><option>Mayo</option><option>Junio</option>
+          <option>Julio</option><option>Agosto</option><option>Septiembre</option>
+          <option>Octubre</option><option>Noviembre</option><option>Diciembre</option>
+        </select>
+        <select id="df-semana" onchange="renderDashboard()"><option value="">Todas las semanas</option></select>
+        <select id="df-estado" onchange="renderDashboard()">
+          <option value="">Todos los estados</option>
+          <option>Excelente</option><option>Correcta</option><option>Observada</option>
+        </select>
+        <button class="filter-reset" onclick="resetDashFilters()">✕ Limpiar filtros</button>
+        <span id="df-count" style="font-size:11px;color:var(--muted);margin-left:auto"></span>
       </div>
+
+      <!-- MÉTRICAS TOP -->
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Total Auditorías</div><div class="metric-value" id="m-total">0</div><div class="metric-sub" id="m-total-sub">registradas</div></div>
+        <div class="metric"><div class="metric-label">Promedio Calidad</div><div class="metric-value" id="m-calidad">—</div><div class="metric-sub" id="m-calidad-sub">% del equipo</div></div>
+        <div class="metric"><div class="metric-label">Promedio Productividad</div><div class="metric-value" id="m-prod">—</div><div class="metric-sub" id="m-prod-sub">% del equipo</div></div>
+        <div class="metric"><div class="metric-label">Promedio General</div><div class="metric-value" id="m-general">—</div><div class="metric-sub" id="m-general-sub">score ponderado</div></div>
+      </div>
+
+      <!-- FILA 1: Score por agente + Evolución por semana -->
       <div class="grid2" style="margin-bottom:16px">
         <div class="card">
           <div class="card-header"><div><div class="card-title">Score General por Agente</div><div class="card-sub" id="chart-agentes-sub">Calidad · Productividad</div></div></div>
           <div class="chart-wrap"><canvas id="chart-agentes"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-header"><div><div class="card-title">Evolución de Calidad</div><div class="card-sub">Últimas 12 auditorías</div></div></div>
+          <div class="card-header">
+            <div><div class="card-title">Evolución de Calidad</div><div class="card-sub" id="chart-evol-sub">Promedio por semana</div></div>
+          </div>
           <div class="chart-wrap"><canvas id="chart-evolucion"></canvas></div>
         </div>
       </div>
-      <div class="grid2">
+
+      <!-- FILA 2: Estados + Desvíos por criterio -->
+      <div class="grid2" style="margin-bottom:16px">
         <div class="card">
           <div class="card-header"><div class="card-title">Estado de Auditorías</div></div>
           <div class="chart-wrap" style="height:190px"><canvas id="chart-estados"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">Top Criterios con Desvío</div><div class="card-sub">% de incumplimiento</div></div>
-          <div id="desvios-list" style="margin-top:6px"></div>
+          <div class="card-header">
+            <div><div class="card-title">Criterios con Mayor Desvío</div><div class="card-sub">% de incumplimiento — todos los criterios</div></div>
+          </div>
+          <div id="desvios-list" style="margin-top:4px"></div>
         </div>
+      </div>
+
+      <!-- FILA 3: Heatmap agente x semana -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header">
+          <div><div class="card-title">Score General por Agente × Semana</div><div class="card-sub">Calidad × Semana — color por estado</div></div>
+          <div style="font-size:11px;color:var(--muted);display:flex;gap:10px;align-items:center">
+            <span style="color:var(--green)">■ Excelente</span>
+            <span style="color:var(--accent)">■ Correcta</span>
+            <span style="color:var(--red)">■ Observada</span>
+          </div>
+        </div>
+        <div class="heatmap-wrap"><div id="heatmap-content"></div></div>
+      </div>
+
+      <!-- FILA 4: Tabla de tendencia por agente -->
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">Tendencia por Agente</div><div class="card-sub">Últimas 2 semanas vs semanas anteriores</div></div></div>
+        <div id="tendencia-content"></div>
       </div>
     </div>
 
@@ -484,13 +576,23 @@
 
     <!-- OBSERVACIONES -->
     <div id="page-observaciones" class="page">
-      <div class="topbar"><div class="topbar-left"><h2>Observaciones</h2><p>Seguimiento de desvíos y acciones</p></div></div>
-      <div class="card">
-        <table>
-          <thead><tr><th>ID</th><th>Fecha</th><th>Agente</th><th>Ticket</th><th>Observación</th><th>Acción Sugerida</th><th>Seguimiento</th></tr></thead>
-          <tbody id="tbody-obs"></tbody>
-        </table>
+      <div class="topbar">
+        <div class="topbar-left"><h2>Observaciones</h2><p>Seguimiento de desvíos y acciones</p></div>
+        <div class="topbar-right">
+          <select id="obs-filter-agente" onchange="renderObservaciones()" style="font-size:12px;padding:5px 10px"><option value="">Todos los agentes</option></select>
+          <select id="obs-filter-estado" onchange="renderObservaciones()" style="font-size:12px;padding:5px 10px">
+            <option value="">Todos los estados</option><option>Excelente</option><option>Correcta</option><option>Observada</option>
+          </select>
+          <select id="obs-filter-mes" onchange="renderObservaciones()" style="font-size:12px;padding:5px 10px">
+            <option value="">Todos los meses</option>
+            <option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option>
+            <option>Mayo</option><option>Junio</option><option>Julio</option><option>Agosto</option>
+            <option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option>
+          </select>
+        </div>
       </div>
+      <div id="obs-count" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div>
+      <div id="obs-cards-container"></div>
     </div>
 
     <!-- AGENTES -->
@@ -906,8 +1008,16 @@ function showPage(id){
   if(id==="configuracion") renderConfigPage();
   if(id==="dashboard")     renderDashboard();
   if(id==="registros")     renderRegistros();
-  if(id==="observaciones") renderObservaciones();
+  if(id==="observaciones"){ populateObsFilters(); renderObservaciones(); }
   if(id==="agentes")       renderAgentes();
+}
+
+function populateObsFilters(){
+  const ofa=document.getElementById("obs-filter-agente");
+  if(ofa && ofa.options.length<=1){
+    const agentes=[...new Set(DB.auditorias.map(a=>a.agente).filter(Boolean))].sort();
+    ofa.innerHTML='<option value="">Todos los agentes</option>'+agentes.map(a=>`<option>${a}</option>`).join("");
+  }
 }
 
 // ================================================================
@@ -919,8 +1029,14 @@ function populateSelects(){
   const fau=document.getElementById("f-auditor"); if(fau) fau.innerHTML=opts(CFG.auditores,"— Seleccionar —");
   const ff=document.getElementById("filter-agente"); if(ff) ff.innerHTML=opts(CFG.agentes,"Todos los agentes");
   const sd=document.getElementById("sel-agente-detail"); if(sd) sd.innerHTML=opts(CFG.agentes,"— Seleccionar agente —");
+  // Dashboard filters
+  const dfa=document.getElementById("df-agente"); if(dfa) dfa.innerHTML=opts(CFG.agentes,"Todos los agentes");
+  // Observaciones filters
+  const ofa=document.getElementById("obs-filter-agente"); if(ofa) ofa.innerHTML=opts(CFG.agentes,"Todos los agentes");
+  // Semanas dinámicas
   const semanas=[...new Set(DB.auditorias.map(a=>a.semana).filter(Boolean))].sort((a,b)=>Number(a)-Number(b));
   const fsem=document.getElementById("filter-semana"); if(fsem) fsem.innerHTML='<option value="">Todas las semanas</option>'+semanas.map(s=>`<option value="${s}">Semana ${s}</option>`).join("");
+  const dfsem=document.getElementById("df-semana"); if(dfsem) dfsem.innerHTML='<option value="">Todas las semanas</option>'+semanas.map(s=>`<option value="${s}">Semana ${s}</option>`).join("");
   document.getElementById("sidebar-info").innerHTML=`Responsable: ${CFG.auditores[0]||"—"}<br>Epic: Servicio al Cliente<br>${CFG.muestras_semana} muestras / agente / semana`;
 }
 
@@ -1254,20 +1370,56 @@ async function deleteAuditoria(id){
 }
 
 // ================================================================
+// DASHBOARD FILTERS
+// ================================================================
+function getDashFiltered(){
+  const ag  = document.getElementById("df-agente")?.value  || "";
+  const mes = document.getElementById("df-mes")?.value     || "";
+  const sem = document.getElementById("df-semana")?.value  || "";
+  const est = document.getElementById("df-estado")?.value  || "";
+  return DB.auditorias.filter(a=>{
+    if(ag  && a.agente !== ag)                 return false;
+    if(mes && a.mes   !== mes)                 return false;
+    if(sem && String(a.semana) !== String(sem)) return false;
+    if(est && a.estado !== est)                return false;
+    return true;
+  });
+}
+
+function resetDashFilters(){
+  ["df-agente","df-mes","df-semana","df-estado"].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value="";
+  });
+  renderDashboard();
+}
+
+// ================================================================
 // DASHBOARD
 // ================================================================
 let _charts={};
 function renderDashboard(){
-  const data=DB.auditorias;
-  document.getElementById("m-total").textContent=data.length;
+  const data = getDashFiltered();
+  const total = DB.auditorias.length;
+
+  // Count label
+  const countEl = document.getElementById("df-count");
+  if(countEl) countEl.textContent = data.length < total
+    ? `Mostrando ${data.length} de ${total} auditorías`
+    : `${total} auditorías`;
+
+  document.getElementById("m-total").textContent = data.length;
   document.getElementById("dash-subtitle").textContent=`${data.length} auditorías · Calidad ${CFG.w_calidad}% + Productividad ${CFG.w_productividad}%`;
   document.getElementById("chart-agentes-sub").textContent=`Calidad ${CFG.w_calidad}% · Productividad ${CFG.w_productividad}%`;
+
   if(!data.length){
     ["m-calidad","m-prod","m-general"].forEach(id=>document.getElementById(id).textContent="—");
     renderCharts([],[],[],[],{Excelente:0,Correcta:0,Observada:0});
     document.getElementById("desvios-list").innerHTML='<p style="color:var(--hint);font-size:13px;padding:8px 0">Sin datos aún.</p>';
+    document.getElementById("heatmap-content").innerHTML='';
+    document.getElementById("tendencia-content").innerHTML='';
     return;
   }
+
   const mEl=id=>document.getElementById(id);
   mEl("m-calidad").textContent=avg(data.map(a=>a.calidad))+"%";
   mEl("m-prod").textContent=avg(data.map(a=>a.productividad))+"%";
@@ -1275,41 +1427,172 @@ function renderDashboard(){
   mEl("m-general").textContent=gAvg+"%";
   const U=getUMB();
   mEl("m-general").className="metric-value "+(gAvg>=U.excelente?"green":gAvg>=U.correcta?"":"red");
+
+  // Chart: score por agente
   const agents={};
   data.forEach(a=>{ if(!agents[a.agente]) agents[a.agente]=[]; agents[a.agente].push(a.general); });
   const agL=Object.keys(agents), agD=agL.map(ag=>avg(agents[ag]));
-  const last12=data.slice(-12);
+
+  // Chart: evolución por semana (promedio calidad por semana, ordenado)
+  const semMap={};
+  data.forEach(a=>{ const s=String(a.semana); if(!semMap[s]) semMap[s]=[]; semMap[s].push(a.calidad); });
+  const semKeys=Object.keys(semMap).sort((a,b)=>Number(a)-Number(b));
+  const evoL=semKeys.map(s=>"S"+s);
+  const evoD=semKeys.map(s=>avg(semMap[s]));
+
   const estados={Excelente:0,Correcta:0,Observada:0};
   data.forEach(a=>{ if(estados[a.estado]!==undefined) estados[a.estado]++; });
-  renderCharts(agL,agD,last12.map(a=>a.agente.split(" ")[0]),last12.map(a=>a.calidad),estados);
+
+  renderCharts(agL,agD,evoL,evoD,estados);
   renderDesvios(data);
+  renderHeatmap(data);
+  renderTendencia(data);
 }
 
-// FIX: usar Chart.getChart() para evitar canvas zombie
 function renderCharts(agL,agD,evoL,evoD,est){
   const destroyChart=(canvasId)=>{ const ch=Chart.getChart(canvasId); if(ch) ch.destroy(); };
   destroyChart("chart-agentes"); destroyChart("chart-evolucion"); destroyChart("chart-estados");
   const U=getUMB();
   const canvA=document.getElementById("chart-agentes"); if(!canvA) return;
-  _charts.A=new Chart(canvA,{type:"bar",data:{labels:agL,datasets:[{data:agD,backgroundColor:agD.map(pct=>pct>=U.excelente?"#15803D":pct>=U.correcta?"#1D4ED8":"#DC2626"),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:pct=>pct+"%"},grid:{color:"rgba(0,0,0,.04)"}},x:{grid:{display:false},ticks:{font:{size:11}}}}}});
-  _charts.E=new Chart(document.getElementById("chart-evolucion"),{type:"line",data:{labels:evoL,datasets:[{data:evoD,borderColor:"#1D4ED8",backgroundColor:"rgba(29,78,216,.07)",tension:0.4,fill:true,pointRadius:4,pointBackgroundColor:"#1D4ED8"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:pct=>pct+"%"},grid:{color:"rgba(0,0,0,.04)"}},x:{display:false}}}});
+  _charts.A=new Chart(canvA,{type:"bar",data:{labels:agL,datasets:[{data:agD,backgroundColor:agD.map(pct=>pct>=U.excelente?"#15803D":pct>=U.correcta?"#1D4ED8":"#DC2626"),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y}%`}}},scales:{y:{min:0,max:100,ticks:{callback:pct=>pct+"%"},grid:{color:"rgba(0,0,0,.04)"}},x:{grid:{display:false},ticks:{font:{size:11}}}}}});
+  _charts.E=new Chart(document.getElementById("chart-evolucion"),{type:"line",data:{labels:evoL,datasets:[{data:evoD,borderColor:"#1D4ED8",backgroundColor:"rgba(29,78,216,.07)",tension:0.4,fill:true,pointRadius:4,pointBackgroundColor:"#1D4ED8"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y}%`}}},scales:{y:{min:0,max:100,ticks:{callback:pct=>pct+"%"},grid:{color:"rgba(0,0,0,.04)"}},x:{ticks:{font:{size:11}}}}}});
   _charts.S=new Chart(document.getElementById("chart-estados"),{type:"doughnut",data:{labels:["Excelente","Correcta","Observada"],datasets:[{data:[est.Excelente,est.Correcta,est.Observada],backgroundColor:["#15803D","#1D4ED8","#DC2626"],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11},usePointStyle:true,pointStyle:"rect"}}}}});
 }
 
 function renderDesvios(data){
   const fail={};
-  data.forEach(a=>a.criterios?.forEach(c=>{ if(c.cumple==="No"){ if(!fail[c.nombre]) fail[c.nombre]=0; fail[c.nombre]++; }}));
-  const sorted=Object.entries(fail).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  // Mapeamos bloque desde criterios de cada auditoría
+  const bloqueMap={};
+  data.forEach(a=>a.criterios?.forEach(c=>{
+    if(!bloqueMap[c.nombre]) bloqueMap[c.nombre]=c.bloque||"";
+    if(c.cumple==="No"){
+      if(!fail[c.nombre]) fail[c.nombre]=0;
+      fail[c.nombre]++;
+    }
+  }));
+  // Total evaluaciones por criterio
+  const total={};
+  data.forEach(a=>a.criterios?.forEach(c=>{
+    if(!total[c.nombre]) total[c.nombre]=0;
+    total[c.nombre]++;
+  }));
+  // Calcular % incumplimiento real
+  const sorted=Object.entries(fail)
+    .map(([n,count])=>({n, count, pct: total[n]?Math.round(count/total[n]*100):0, bloque:bloqueMap[n]||""}))
+    .sort((a,b)=>b.pct-a.pct);
   const cont=document.getElementById("desvios-list");
   if(!sorted.length){ cont.innerHTML='<p style="color:var(--hint);font-size:13px;padding:8px 0">Sin desvíos registrados.</p>'; return; }
-  cont.innerHTML=sorted.map(([n,count])=>{
-    const pct=Math.round(count/data.length*100);
-    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-      <div style="flex:1;font-size:12px">${n}</div>
-      <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%;background:var(--red)"></div></div>
-      <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--red);min-width:30px;text-align:right">${pct}%</div>
+  cont.innerHTML=sorted.map(({n,pct,bloque})=>{
+    const tagClass=bloque==="Comunicacion"?"bloque-com":"bloque-ges";
+    const tagLabel=bloque==="Comunicacion"?"Com":"Ges";
+    const barColor=pct>50?"var(--red)":pct>25?"var(--amber)":"var(--green)";
+    return `<div class="desvio-row">
+      <div class="desvio-name"><span class="desvio-bloque ${tagClass}">${tagLabel}</span>${n}</div>
+      <div class="mini-bar" style="width:80px"><div class="mini-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      <div style="font-size:11px;font-family:'DM Mono',monospace;color:${barColor};min-width:34px;text-align:right;font-weight:700">${pct}%</div>
     </div>`;
   }).join("");
+}
+
+// ================================================================
+// HEATMAP AGENTE × SEMANA
+// ================================================================
+function renderHeatmap(data){
+  const cont=document.getElementById("heatmap-content");
+  if(!data.length){ cont.innerHTML=''; return; }
+  // Agrupar: agente → semana → avg calidad
+  const matrix={};
+  const semanas=new Set();
+  data.forEach(a=>{
+    const sem=String(a.semana);
+    semanas.add(sem);
+    if(!matrix[a.agente]) matrix[a.agente]={};
+    if(!matrix[a.agente][sem]) matrix[a.agente][sem]=[];
+    matrix[a.agente][sem].push(a.calidad);
+  });
+  const semList=[...semanas].sort((a,b)=>Number(a)-Number(b));
+  const agList=Object.keys(matrix).sort();
+  const U=getUMB();
+  const cellClass=v=>{
+    if(v===null) return "hm-empty";
+    if(v>=U.excelente) return "hm-excelente";
+    if(v>=U.correcta)  return "hm-correcta";
+    return "hm-observada";
+  };
+  let html=`<table class="heatmap-table"><thead><tr><th class="agent-col">Agente</th>`;
+  semList.forEach(s=>{ html+=`<th>S${s}</th>`; });
+  html+=`<th>Prom.</th></tr></thead><tbody>`;
+  agList.forEach(ag=>{
+    const vals=semList.map(s=>{
+      const arr=matrix[ag][s];
+      return arr?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):null;
+    });
+    const nonNull=vals.filter(v=>v!==null);
+    const prom=nonNull.length?Math.round(nonNull.reduce((a,b)=>a+b,0)/nonNull.length):null;
+    html+=`<tr><td class="agent-name">${ag}</td>`;
+    vals.forEach(v=>{ html+=`<td class="${cellClass(v)}">${v!==null?v+"%":"—"}</td>`; });
+    html+=`<td class="${cellClass(prom)}" style="font-weight:700">${prom!==null?prom+"%":"—"}</td>`;
+    html+=`</tr>`;
+  });
+  html+=`</tbody></table>`;
+  cont.innerHTML=html;
+}
+
+// ================================================================
+// TENDENCIA POR AGENTE
+// ================================================================
+function renderTendencia(data){
+  const cont=document.getElementById("tendencia-content");
+  if(!data.length){ cont.innerHTML=''; return; }
+  // Obtener semanas únicas ordenadas
+  const semanas=[...new Set(data.map(a=>Number(a.semana)))].sort((a,b)=>a-b);
+  if(semanas.length<2){ cont.innerHTML='<p style="color:var(--hint);font-size:13px;padding:12px">Se necesitan al menos 2 semanas de datos para calcular tendencia.</p>'; return; }
+  // Últimas 2 semanas vs resto
+  const lastSems=semanas.slice(-2);
+  const prevSems=semanas.slice(0,-2);
+  const agentes=[...new Set(data.map(a=>a.agente))].sort();
+  const semAvg=(ag,sems)=>{
+    const sub=data.filter(a=>a.agente===ag&&sems.includes(Number(a.semana)));
+    return sub.length?Math.round(sub.reduce((s,a)=>s+a.calidad,0)/sub.length):null;
+  };
+  const rows=agentes.map(ag=>{
+    const reciente=semAvg(ag,lastSems);
+    const anterior=prevSems.length?semAvg(ag,prevSems):null;
+    const diff=reciente!==null&&anterior!==null?reciente-anterior:null;
+    return {ag, reciente, anterior, diff};
+  }).filter(r=>r.reciente!==null).sort((a,b)=>(b.reciente||0)-(a.reciente||0));
+  const U=getUMB();
+  const scoreCell=v=>{
+    if(v===null) return '<span style="color:var(--hint)">—</span>';
+    const cls=v>=U.excelente?"sc-green":v>=U.correcta?"sc-amber":"sc-red";
+    return `<span class="score-cell ${cls}">${v}%</span>`;
+  };
+  const trendChip=diff=>{
+    if(diff===null) return '<span style="color:var(--hint);font-size:11px">—</span>';
+    if(Math.abs(diff)<3) return `<span class="tend-chip tend-flat">→ ${diff>0?"+":""}${diff}%</span>`;
+    if(diff>0)  return `<span class="tend-chip tend-up">↑ +${diff}%</span>`;
+    return `<span class="tend-chip tend-down">↓ ${diff}%</span>`;
+  };
+  let html=`<table class="trend-table">
+    <thead><tr>
+      <th>Agente</th>
+      <th>Sem. anteriores (${prevSems.length?prevSems[0]+"-"+prevSems[prevSems.length-1]:"—"})</th>
+      <th>Últimas 2 sem. (${lastSems[0]}-${lastSems[lastSems.length-1]})</th>
+      <th>Variación</th>
+      <th>Estado actual</th>
+    </tr></thead><tbody>`;
+  rows.forEach(({ag,reciente,anterior,diff})=>{
+    const estado=reciente!==null?calcEstado(reciente):"—";
+    html+=`<tr>
+      <td style="font-weight:600">${ag}</td>
+      <td>${scoreCell(anterior)}</td>
+      <td>${scoreCell(reciente)}</td>
+      <td>${trendChip(diff)}</td>
+      <td><span class="badge ${estadoBadge(estado)}">${estado}</span></td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  cont.innerHTML=html;
 }
 
 // ================================================================
@@ -1332,16 +1615,19 @@ function renderRegistros(){
   document.getElementById("registros-count").textContent=`Mostrando ${data.length} de ${DB.auditorias.length} registros${PENDING_QUEUE.length?` · ⚠ ${PENDING_QUEUE.length} pendiente${PENDING_QUEUE.length>1?"s":""}`:""}.`;
   const tbody=document.getElementById("tbody-registros");
   if(!data.length){ tbody.innerHTML='<tr><td colspan="13" style="text-align:center;color:var(--hint);padding:24px">Sin registros.</td></tr>'; return; }
+  const U=getUMB();
+  const sc=(v)=>{ const c=v>=U.excelente?"sc-green":v>=U.correcta?"sc-amber":"sc-red"; return `<span class="score-cell ${c}">${v}%</span>`; };
   tbody.innerHTML=data.map(a=>`<tr>
     <td><span style="font-family:'DM Mono',monospace;font-size:11px">${a.id_auditoria}</span></td>
     <td>${a.fecha_auditoria}</td>
-    <td style="font-weight:500">${a.agente}</td>
-    <td>${a.ticket}</td><td>${a.canal}</td>
+    <td style="font-weight:600">${a.agente}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:12px">${a.ticket}</td>
+    <td>${a.canal}</td>
     <td style="font-family:'DM Mono',monospace;text-align:center">${a.semana}</td>
     <td style="font-family:'DM Mono',monospace;text-align:center">${a.horas_trabajadas}hs</td>
-    <td style="font-family:'DM Mono',monospace;text-align:center">${a.calidad}%</td>
-    <td style="font-family:'DM Mono',monospace;text-align:center">${a.productividad}%</td>
-    <td style="font-family:'DM Mono',monospace;font-weight:700;text-align:center">${a.general}%</td>
+    <td style="text-align:center">${sc(a.calidad)}</td>
+    <td style="text-align:center">${sc(a.productividad)}</td>
+    <td style="text-align:center">${sc(a.general)}</td>
     <td><span class="badge ${estadoBadge(a.estado)}">${a.estado}</span></td>
     <td>${a.sheets_enviado?'<span class="badge badge-ok">✓ Sheets</span>':'<span class="badge badge-local">Pendiente</span>'}</td>
     <td><button class="btn xs danger" onclick="deleteAuditoria('${a.id_auditoria}')">✕</button></td>
@@ -1352,18 +1638,39 @@ function renderRegistros(){
 // OBSERVACIONES
 // ================================================================
 function renderObservaciones(){
-  const data=DB.auditorias.filter(a=>a.obs_general||a.obs_accion);
-  const tbody=document.getElementById("tbody-obs");
-  if(!data.length){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--hint);padding:24px">Sin observaciones.</td></tr>'; return; }
-  tbody.innerHTML=data.map(a=>`<tr>
-    <td><span style="font-family:'DM Mono',monospace;font-size:11px">${a.id_auditoria}</span></td>
-    <td>${a.fecha_auditoria}</td>
-    <td style="font-weight:500">${a.agente}</td>
-    <td>${a.ticket}</td>
-    <td style="font-size:12px;max-width:180px">${a.obs_general||"—"}</td>
-    <td style="font-size:12px;max-width:180px">${a.obs_accion||"—"}</td>
-    <td><span class="chip ${a.requiere_seguimiento==="Sí"?"chip-pend":"chip-ok"}">${a.requiere_seguimiento==="Sí"?"Pendiente":"No"}</span></td>
-  </tr>`).join("");
+  const agFilter  = document.getElementById("obs-filter-agente")?.value  || "";
+  const estFilter = document.getElementById("obs-filter-estado")?.value  || "";
+  const mesFilter = document.getElementById("obs-filter-mes")?.value     || "";
+  const data=DB.auditorias.filter(a=>{
+    if(!a.obs_general && !a.obs_accion) return false;
+    if(agFilter  && a.agente !== agFilter)  return false;
+    if(estFilter && a.estado !== estFilter) return false;
+    if(mesFilter && a.mes   !== mesFilter)  return false;
+    return true;
+  }).sort((a,b)=>a.general-b.general); // peores primero
+  const countEl=document.getElementById("obs-count");
+  if(countEl) countEl.textContent=`${data.length} observaci${data.length===1?"ón":"ones"} encontradas`;
+  const cont=document.getElementById("obs-cards-container");
+  if(!data.length){ cont.innerHTML='<div class="card" style="color:var(--hint);text-align:center;padding:32px">Sin observaciones con los filtros seleccionados.</div>'; return; }
+  const U=getUMB();
+  cont.innerHTML=data.map(a=>{
+    const scoreClass=a.general>=U.excelente?"ok-score":a.general>=U.correcta?"mid-score":"low-score";
+    const scCell=v=>{const c=v>=U.excelente?"sc-green":v>=U.correcta?"sc-amber":"sc-red"; return `<span class="score-cell ${c}">${v}%</span>`;};
+    return `<div class="obs-card ${scoreClass}">
+      <div class="obs-meta">
+        <strong>${a.agente}</strong>
+        <span>${a.fecha_auditoria}</span>
+        ${a.ticket?`<span>Ticket: ${a.ticket}</span>`:""}
+        <span>Sem. ${a.semana} · ${a.mes}</span>
+        <span style="margin-left:auto;display:flex;gap:6px;align-items:center">
+          Cal: ${scCell(a.calidad)} Prod: ${scCell(a.productividad)} Gen: ${scCell(a.general)}
+          <span class="badge ${estadoBadge(a.estado)}">${a.estado}</span>
+        </span>
+      </div>
+      ${a.obs_general?`<div class="obs-text">${a.obs_general}</div>`:""}
+      ${a.obs_accion?`<div style="margin-top:6px;font-size:11px;color:var(--amber);font-weight:500">→ Acción: ${a.obs_accion}</div>`:""}
+    </div>`;
+  }).join("");
 }
 
 // ================================================================
