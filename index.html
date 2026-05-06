@@ -230,7 +230,7 @@
   <aside class="sidebar">
     <div class="logo-area">
       <h1>AuditCS</h1>
-      <span>Customer Service · v4.0</span>
+      <span>Customer Service · v5.0</span>
     </div>
     <nav class="nav">
       <div class="nav-section">Reportes</div>
@@ -920,71 +920,36 @@ function updateSemanaCount(){
 // ================================================================
 // CRITERIOS (FORMULARIO)
 // ================================================================
+function makeCriterioRow(c){
+  const row=document.createElement("div"); row.className="criteria-row";
+  row.innerHTML=`
+    <div class="criteria-name">${c.nombre}</div>
+    <div class="criteria-peso">${c.peso}%</div>
+    <div class="radio-group">
+      <label class="radio-btn yes" id="btn-yes-${c.cod}"><input type="radio" name="crit-${c.cod}" value="si" onchange="onCritChange('${c.cod}',${c.peso})"> Sí</label>
+      <label class="radio-btn no"  id="btn-no-${c.cod}"><input type="radio" name="crit-${c.cod}" value="no" onchange="onCritChange('${c.cod}',0)"> No</label>
+    </div>
+    <div class="criteria-score" id="cscore-${c.cod}" style="color:var(--hint)">—</div>`;
+  return row;
+}
+
 function renderCriterios(){
   const active=activeCriterios();
-  const bloques=[...new Set(active.map(c=>c.bloque))];
-  bloques.forEach(bl=>{
-    const cBl=active.filter(c=>c.bloque===bl);
-    const wrapId="criterios-"+bl.toLowerCase().replace(/[^a-z]/g,"")+"-wrap";
-    const contId="criterios-"+bl.toLowerCase().replace(/[^a-z]/g,"");
-    const wrap=document.getElementById(wrapId)||document.getElementById("criterios-comunicacion-wrap");
-    const cont=document.getElementById(contId)||document.getElementById("criterios-comunicacion");
-    if(!cont) return;
-    // Update header bloque name
-    const hdr=wrap?.querySelector(".criteria-header span");
-    if(hdr) hdr.textContent=bl;
-    cont.innerHTML="";
-    cBl.forEach(c=>{
-      const row=document.createElement("div"); row.className="criteria-row";
-      row.innerHTML=`
-        <div class="criteria-name">${c.nombre}</div>
-        <div class="criteria-peso">${c.peso}%</div>
-        <div class="radio-group">
-          <label class="radio-btn yes" id="btn-yes-${c.cod}"><input type="radio" name="crit-${c.cod}" value="si" onchange="onCritChange('${c.cod}',${c.peso})"> Sí</label>
-          <label class="radio-btn no"  id="btn-no-${c.cod}"><input type="radio" name="crit-${c.cod}" value="no" onchange="onCritChange('${c.cod}',0)"> No</label>
-        </div>
-        <div class="criteria-score" id="cscore-${c.cod}" style="color:var(--hint)">—</div>`;
-      cont.appendChild(row);
-    });
-  });
-  // Render Gestión if separate
-  const gesActive=active.filter(c=>c.bloque==="Gestion");
-  const gesWrap=document.getElementById("criterios-gestion-wrap");
+  // Render Comunicación
+  const comCont=document.getElementById("criterios-comunicacion");
+  const comWrap=document.getElementById("criterios-comunicacion-wrap");
+  if(comCont){
+    comWrap.querySelector(".criteria-header span").textContent="Comunicación";
+    comCont.innerHTML="";
+    active.filter(c=>c.bloque==="Comunicacion").forEach(c=>comCont.appendChild(makeCriterioRow(c)));
+  }
+  // Render Gestión
   const gesCont=document.getElementById("criterios-gestion");
-  if(gesWrap&&gesCont){
+  const gesWrap=document.getElementById("criterios-gestion-wrap");
+  if(gesCont){
     gesWrap.querySelector(".criteria-header span").textContent="Gestión";
     gesCont.innerHTML="";
-    gesActive.forEach(c=>{
-      const row=document.createElement("div"); row.className="criteria-row";
-      row.innerHTML=`
-        <div class="criteria-name">${c.nombre}</div>
-        <div class="criteria-peso">${c.peso}%</div>
-        <div class="radio-group">
-          <label class="radio-btn yes" id="btn-yes-${c.cod}"><input type="radio" name="crit-${c.cod}" value="si" onchange="onCritChange('${c.cod}',${c.peso})"> Sí</label>
-          <label class="radio-btn no"  id="btn-no-${c.cod}"><input type="radio" name="crit-${c.cod}" value="no" onchange="onCritChange('${c.cod}',0)"> No</label>
-        </div>
-        <div class="criteria-score" id="cscore-${c.cod}" style="color:var(--hint)">—</div>`;
-      gesCont.appendChild(row);
-    });
-  }
-  // Also render Com
-  const comActive=active.filter(c=>c.bloque==="Comunicacion");
-  const comCont=document.getElementById("criterios-comunicacion");
-  if(comCont){
-    document.getElementById("criterios-comunicacion-wrap").querySelector(".criteria-header span").textContent="Comunicación";
-    comCont.innerHTML="";
-    comActive.forEach(c=>{
-      const row=document.createElement("div"); row.className="criteria-row";
-      row.innerHTML=`
-        <div class="criteria-name">${c.nombre}</div>
-        <div class="criteria-peso">${c.peso}%</div>
-        <div class="radio-group">
-          <label class="radio-btn yes" id="btn-yes-${c.cod}"><input type="radio" name="crit-${c.cod}" value="si" onchange="onCritChange('${c.cod}',${c.peso})"> Sí</label>
-          <label class="radio-btn no"  id="btn-no-${c.cod}"><input type="radio" name="crit-${c.cod}" value="no" onchange="onCritChange('${c.cod}',0)"> No</label>
-        </div>
-        <div class="criteria-score" id="cscore-${c.cod}" style="color:var(--hint)">—</div>`;
-      comCont.appendChild(row);
-    });
+    active.filter(c=>c.bloque==="Gestion").forEach(c=>gesCont.appendChild(makeCriterioRow(c)));
   }
   updateCalidadTotal();
 }
@@ -1113,7 +1078,7 @@ async function submitAuditoria(){
     id, id_auditoria:id,
     fecha_registro:new Date().toISOString(),
     fecha_auditoria:v("f-fecha"),
-    anio:new Date().getFullYear(),
+    anio:v("f-fecha")?new Date(v("f-fecha")+"T00:00:00").getFullYear():new Date().getFullYear(),
     mes:v("f-mes"), semana:v("f-semana"),
     auditor:v("f-auditor"), agente:v("f-agente"),
     ticket:v("f-ticket"), canal:v("f-canal"), tipo:v("f-tipo"),
@@ -1205,8 +1170,8 @@ function renderDashboard(){
 function renderCharts(agL,agD,evoL,evoD,est){
   ["A","E","S"].forEach(k=>{ if(_charts[k]){ _charts[k].destroy(); delete _charts[k]; }});
   const U=getUMB();
-  _charts.A=new Chart(document.getElementById("chart-agentes"),{type:"bar",data:{labels:agL,datasets:[{data:agD,backgroundColor:agD.map(v=>v>=U.excelente?"#15803D":v>=U.correcta?"#1D4ED8":"#DC2626"),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+"%"},grid:{color:"rgba(0,0,0,.04)"}},x:{grid:{display:false},ticks:{font:{size:11}}}}}});
-  _charts.E=new Chart(document.getElementById("chart-evolucion"),{type:"line",data:{labels:evoL,datasets:[{data:evoD,borderColor:"#1D4ED8",backgroundColor:"rgba(29,78,216,.07)",tension:0.4,fill:true,pointRadius:4,pointBackgroundColor:"#1D4ED8"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+"%"},grid:{color:"rgba(0,0,0,.04)"}},x:{display:false}}}});
+  _charts.A=new Chart(document.getElementById("chart-agentes"),{type:"bar",data:{labels:agL,datasets:[{data:agD,backgroundColor:agD.map(pct=>pct>=U.excelente?"#15803D":pct>=U.correcta?"#1D4ED8":"#DC2626"),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:pct=>pct+"%"},grid:{color:"rgba(0,0,0,.04)"}},x:{grid:{display:false},ticks:{font:{size:11}}}}}});
+  _charts.E=new Chart(document.getElementById("chart-evolucion"),{type:"line",data:{labels:evoL,datasets:[{data:evoD,borderColor:"#1D4ED8",backgroundColor:"rgba(29,78,216,.07)",tension:0.4,fill:true,pointRadius:4,pointBackgroundColor:"#1D4ED8"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:pct=>pct+"%"},grid:{color:"rgba(0,0,0,.04)"}},x:{display:false}}}});
   _charts.S=new Chart(document.getElementById("chart-estados"),{type:"doughnut",data:{labels:["Excelente","Correcta","Observada"],datasets:[{data:[est.Excelente,est.Correcta,est.Observada],backgroundColor:["#15803D","#1D4ED8","#DC2626"],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11},usePointStyle:true,pointStyle:"rect"}}}}});
 }
 
