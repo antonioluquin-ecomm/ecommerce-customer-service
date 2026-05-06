@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AuditCS | Customer Service v9</title>
+  <title>AuditCS | Customer Service v10</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <style>
@@ -21,7 +21,6 @@
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--ink);font-size:14px;min-height:100vh}
     .shell{display:grid;grid-template-columns:224px 1fr;min-height:100vh}
-    /* SIDEBAR */
     .sidebar{background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
     .logo-area{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
     .logo-area h1{font-size:17px;font-weight:600;letter-spacing:-.4px}
@@ -40,7 +39,6 @@
     .sheets-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;animation:pulse 2s ease-in-out infinite}
     .sheets-btn.disconnected .sheets-dot{animation:none}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-    /* MAIN */
     .main{overflow-y:auto}
     .page{display:none;padding:28px;max-width:1120px}
     .page.active{display:block}
@@ -48,7 +46,6 @@
     .topbar-left h2{font-size:21px;font-weight:600;letter-spacing:-.5px}
     .topbar-left p{font-size:13px;color:var(--muted);margin-top:3px}
     .topbar-right{display:flex;gap:8px;flex-shrink:0;padding-top:2px}
-    /* BUTTONS */
     .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--ink);transition:all .15s;white-space:nowrap}
     .btn:hover{background:var(--surface);border-color:var(--border2)}
     .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
@@ -60,22 +57,18 @@
     .btn.sm{padding:5px 10px;font-size:12px}
     .btn.xs{padding:3px 8px;font-size:11px}
     .btn:disabled{opacity:.45;cursor:not-allowed}
-    /* CARDS */
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
     .card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:12px}
     .card-title{font-size:14px;font-weight:600}
     .card-sub{font-size:12px;color:var(--muted);margin-top:2px}
-    /* METRICS */
     .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
     .metric{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
     .metric-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
     .metric-value{font-size:28px;font-weight:600;margin-top:5px;letter-spacing:-1.2px;font-family:"DM Mono",monospace}
     .metric-value.green{color:var(--green)}.metric-value.amber{color:var(--amber)}.metric-value.red{color:var(--red)}
     .metric-sub{font-size:11px;color:var(--hint);margin-top:4px}
-    /* GRIDS */
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
-    /* FORM WIZARD */
     .form-progress{display:flex;margin-bottom:24px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
     .step-tab{flex:1;padding:11px 6px;text-align:center;cursor:pointer;border-right:1px solid var(--border);font-size:12px;font-weight:500;color:var(--muted);transition:all .15s;user-select:none}
     .step-tab:last-child{border-right:none}
@@ -97,7 +90,6 @@
     input.error,select.error{border-color:var(--red)}
     textarea{resize:vertical;min-height:72px}
     .helper{font-size:11px;color:var(--hint);line-height:1.4}
-    /* CRITERIA */
     .criteria-group{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
     .criteria-header{background:var(--surface);padding:9px 14px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
     .criteria-header-right{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--hint)}
@@ -112,19 +104,16 @@
     .radio-btn.yes{border-color:var(--green);color:var(--green)}.radio-btn.yes.selected{background:var(--green-bg)}
     .radio-btn.no{border-color:var(--red);color:var(--red)}.radio-btn.no.selected{background:var(--red-bg)}
     .criteria-score{font-size:13px;font-family:"DM Mono",monospace;text-align:center;font-weight:600}
-    /* SCORE SUMMARY */
     .score-summary{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:center}
     .ss-value{font-size:28px;font-weight:600;letter-spacing:-1px;font-family:"DM Mono",monospace}
     .ss-label{font-size:11px;color:var(--muted);margin-top:2px}
     .ss-badge{margin-top:5px}
-    /* PROD ROW */
     .prod-row{display:grid;grid-template-columns:1fr 90px 110px 80px;gap:10px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--border)}
     .prod-row:last-child{border-bottom:none}
     .prod-label{font-size:13px;font-weight:500}
     .prod-label span{display:block;font-size:11px;color:var(--muted);margin-top:2px;font-weight:400}
     .prod-target{font-size:13px;font-family:"DM Mono",monospace;color:var(--muted);text-align:center}
     .prod-pct{font-size:14px;font-family:"DM Mono",monospace;font-weight:600;text-align:center}
-    /* BADGES */
     .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
     .badge-excelente{background:var(--green-bg);color:var(--green)}
     .badge-correcta{background:var(--accent-light);color:var(--accent)}
@@ -135,81 +124,68 @@
     .sb-green{background:var(--green-bg);color:var(--green)}
     .sb-amber{background:var(--amber-bg);color:var(--amber)}
     .sb-red{background:var(--red-bg);color:var(--red)}
-    /* TABLE */
     table{width:100%;border-collapse:collapse;font-size:13px}
     th{text-align:left;padding:8px 12px;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--surface);white-space:nowrap}
     td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
     tr:last-child td{border-bottom:none}
     tr:hover td{background:var(--surface)}
-    /* MINI BAR */
     .mini-bar{height:5px;background:var(--border);border-radius:3px;flex:1;overflow:hidden;min-width:40px}
     .mini-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
-    /* ALERTS */
     .alert{padding:11px 14px;border-radius:var(--r);font-size:13px;margin-bottom:14px;border-left:3px solid}
     .alert.success{background:var(--green-bg);border-color:var(--green);color:var(--green)}
     .alert.warning{background:var(--amber-bg);border-color:var(--amber);color:var(--amber)}
     .alert.info{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
     .alert.error{background:var(--red-bg);border-color:var(--red);color:var(--red)}
     .hidden{display:none!important}
-    /* FILTER BAR */
     .filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
     .filter-bar input,.filter-bar select{width:auto;flex:1;min-width:110px;max-width:190px}
-    /* CHART */
     .chart-wrap{position:relative;width:100%;height:250px}
-    /* AGENT */
     .agent-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
     .agent-row:last-child{border-bottom:none}
     .avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;background:var(--accent-light);color:var(--accent)}
-    /* CHIPS */
     .chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
     .chip-pend{background:var(--amber-bg);color:var(--amber)}
     .chip-ok{background:var(--green-bg);color:var(--green)}
-    /* INFO BOX */
     .info-box{background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--r);padding:14px 16px;margin-bottom:14px}
     .info-box p{font-size:12px;color:var(--accent);line-height:1.6}
     .info-box strong{font-weight:600}
     .warn-box{background:var(--amber-bg);border:1px solid var(--amber-mid);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--amber)}
-    /* STEP ACTIONS */
     .step-actions{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
-    /* LOADING */
     #loading-overlay{position:fixed;inset:0;background:rgba(245,244,240,.95);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
     .spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
     .spinner.sm{width:14px;height:14px;border-width:2px}
     @keyframes spin{to{transform:rotate(360deg)}}
     #loading-msg{font-size:14px;color:var(--ink);font-weight:500}
     #loading-sub{font-size:12px;color:var(--muted)}
-    /* SYNC BAR */
     .sync-bar{background:var(--accent);color:#fff;font-size:12px;font-weight:500;padding:8px 20px;display:flex;align-items:center;gap:10px;justify-content:center;position:fixed;top:0;left:0;right:0;z-index:200;transform:translateY(-100%);transition:transform .3s}
     .sync-bar.show{transform:translateY(0)}
-    /* PESO INDICATOR */
+    .sync-bar.err{background:var(--red)}
     .peso-indicator{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:10px;gap:2px}
     .peso-segment{height:100%;border-radius:2px;transition:flex .3s;min-width:2px}
-    /* CONFIG TABLE */
     .cfg-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
     .cfg-table th{background:var(--surface);padding:8px 12px;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);text-align:left}
     .cfg-table td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
     .cfg-table tr:last-child td{border-bottom:none}
     .cfg-table tr:hover td{background:var(--surface)}
     .cfg-table input[type=number]{width:72px;text-align:center;padding:5px 8px;font-family:"DM Mono",monospace;font-size:13px}
-    .cfg-table input[type=text]{padding:5px 9px;font-size:13px}
     .cfg-table .bloque-tag{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
     .tag-com{background:var(--accent-light);color:var(--accent)}
     .tag-ges{background:var(--teal-bg);color:var(--teal)}
-    /* PESO SUM */
     .peso-sum{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:6px;font-size:12px;font-weight:500;margin-top:10px}
     .peso-sum.ok{background:var(--green-bg);color:var(--green)}
     .peso-sum.err{background:var(--red-bg);color:var(--red)}
-    /* TOGGLE */
     .toggle{position:relative;display:inline-block;width:32px;height:18px}
     .toggle input{display:none}
     .toggle-slider{position:absolute;inset:0;border-radius:18px;background:var(--border);cursor:pointer;transition:.2s}
     .toggle input:checked + .toggle-slider{background:var(--green)}
     .toggle-slider:before{content:"";position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;top:3px;left:3px;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
     .toggle input:checked + .toggle-slider:before{left:17px}
-    /* RESUMEN GRID */
     .resumen-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
     .resumen-item .rl{font-size:11px;color:var(--muted)}
     .resumen-item .rv{font-size:14px;font-weight:600;margin-top:2px}
+    /* Cola offline */
+    .offline-badge{display:none;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-mid);border-radius:20px;font-size:11px;font-weight:600;padding:2px 10px;margin-left:8px}
+    .offline-badge.show{display:inline-block}
   </style>
 </head>
 <body>
@@ -226,11 +202,10 @@
 </div>
 
 <div class="shell">
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="logo-area">
       <h1>AuditCS</h1>
-      <span>Customer Service · v9.0</span>
+      <span>Customer Service · v10.0</span>
     </div>
     <nav class="nav">
       <div class="nav-section">Reportes</div>
@@ -254,6 +229,7 @@
       <button class="nav-item" onclick="showPage('registros')">
         <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H2a1 1 0 01-1-1V2zm1 0v12h12V2H2z"/><path d="M4 5h8v1H4zM4 8h8v1H4zM4 11h5v1H4z"/></svg>
         Registros
+        <span class="offline-badge" id="offline-badge">0</span>
       </button>
       <div class="nav-section">Sistema</div>
       <button class="nav-item" onclick="showPage('configuracion')">
@@ -273,7 +249,7 @@
 
   <main class="main">
 
-    <!-- ===== DASHBOARD ===== -->
+    <!-- DASHBOARD -->
     <div id="page-dashboard" class="page active">
       <div class="topbar">
         <div class="topbar-left"><h2>Dashboard</h2><p id="dash-subtitle">Métricas de desempeño del equipo</p></div>
@@ -285,9 +261,9 @@
       </div>
       <div class="metrics">
         <div class="metric"><div class="metric-label">Total Auditorías</div><div class="metric-value" id="m-total">0</div><div class="metric-sub">registradas</div></div>
-        <div class="metric"><div class="metric-label">Promedio Calidad</div><div class="metric-value" id="m-calidad">—</div><div class="metric-sub" id="m-calidad-sub">% del equipo</div></div>
-        <div class="metric"><div class="metric-label">Promedio Productividad</div><div class="metric-value" id="m-prod">—</div><div class="metric-sub" id="m-prod-sub">% del equipo</div></div>
-        <div class="metric"><div class="metric-label">Promedio General</div><div class="metric-value" id="m-general">—</div><div class="metric-sub" id="m-general-sub">score ponderado</div></div>
+        <div class="metric"><div class="metric-label">Promedio Calidad</div><div class="metric-value" id="m-calidad">—</div><div class="metric-sub">% del equipo</div></div>
+        <div class="metric"><div class="metric-label">Promedio Productividad</div><div class="metric-value" id="m-prod">—</div><div class="metric-sub">% del equipo</div></div>
+        <div class="metric"><div class="metric-label">Promedio General</div><div class="metric-value" id="m-general">—</div><div class="metric-sub">score ponderado</div></div>
       </div>
       <div class="grid2" style="margin-bottom:16px">
         <div class="card">
@@ -311,7 +287,7 @@
       </div>
     </div>
 
-    <!-- ===== FORMULARIO ===== -->
+    <!-- FORMULARIO -->
     <div id="page-formulario" class="page">
       <div class="topbar"><div class="topbar-left"><h2>Nueva Auditoría</h2><p>Completá los 5 pasos</p></div></div>
       <div id="form-alert" class="alert success hidden"></div>
@@ -330,9 +306,10 @@
             <div class="section-title">Identificación</div>
             <div class="fg c4">
               <div class="field"><label>Auditor *</label><select id="f-auditor"><option value="">— Seleccionar —</option></select></div>
-              <div class="field"><label>Fecha *</label><input type="date" id="f-fecha"/></div>
-              <div class="field"><label>Mes</label><select id="f-mes"><option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option><option>Mayo</option><option>Junio</option><option>Julio</option><option>Agosto</option><option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option></select></div>
-              <div class="field"><label>Semana del año *</label><input type="number" id="f-semana" placeholder="Ej: 20" min="1" max="52" oninput="updateSemanaCount()"/></div>
+              <!-- FIX: fecha actualiza mes y semana automáticamente -->
+              <div class="field"><label>Fecha *</label><input type="date" id="f-fecha" oninput="onFechaChange()"/></div>
+              <div class="field"><label>Mes</label><select id="f-mes" disabled style="background:var(--surface);color:var(--muted)"><option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option><option>Mayo</option><option>Junio</option><option>Julio</option><option>Agosto</option><option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option></select></div>
+              <div class="field"><label>Semana del año</label><input type="number" id="f-semana" placeholder="Auto" min="1" max="52" readonly style="background:var(--surface);color:var(--muted)" oninput="updateSemanaCount()"/></div>
             </div>
           </div>
           <div class="form-section">
@@ -359,7 +336,9 @@
                 <span class="helper" id="horas-formula-hint">Fórmula: si 44 hs → 660 tickets · proporcional al resto</span>
               </div>
             </div>
+            <!-- FIX: alerta de duplicado por agente+ticket -->
             <div id="semana-count-alert" class="hidden warn-box" style="margin-top:10px"></div>
+            <div id="duplicate-alert" class="hidden alert warning" style="margin-top:10px"></div>
           </div>
           <div class="step-actions"><span></span><button class="btn primary" onclick="validateStep1()">Siguiente →</button></div>
         </div>
@@ -373,6 +352,8 @@
             <div><div class="ss-value" id="sc-pct">0%</div><div class="ss-label">% obtenido</div><div class="ss-badge" id="sc-badge"></div></div>
             <div><div class="ss-value" id="sc-criterios" style="color:var(--muted)">0/0</div><div class="ss-label">Criterios evaluados</div></div>
           </div>
+          <!-- FIX: alert si faltan criterios sin evaluar -->
+          <div id="criterios-incomplete-alert" class="hidden alert error" style="margin-bottom:12px"></div>
           <div id="criterios-comunicacion-wrap" class="criteria-group">
             <div class="criteria-header">
               <span>Comunicación</span>
@@ -387,7 +368,8 @@
             </div>
             <div id="criterios-gestion"></div>
           </div>
-          <div class="step-actions"><button class="btn" onclick="goStep(1)">← Anterior</button><button class="btn primary" onclick="goStep(3)">Siguiente →</button></div>
+          <!-- FIX: validateStep2() bloquea avance si hay criterios sin evaluar -->
+          <div class="step-actions"><button class="btn" onclick="goStep(1)">← Anterior</button><button class="btn primary" onclick="validateStep2()">Siguiente →</button></div>
         </div>
       </div>
 
@@ -432,7 +414,8 @@
             <div><div class="ss-value" id="pp-asist" style="color:var(--teal)">—</div><div class="ss-label">% Asistencia prom.</div></div>
             <div><div class="ss-value" id="pp-total" style="color:var(--green)">—</div><div class="ss-label">Total Productividad</div></div>
           </div>
-          <div class="step-actions"><button class="btn" onclick="goStep(2)">← Anterior</button><button class="btn primary" onclick="goStep(4)">Siguiente →</button></div>
+          <!-- FIX: validateStep3() obliga a ingresar interacciones reales -->
+          <div class="step-actions"><button class="btn" onclick="goStep(2)">← Anterior</button><button class="btn primary" onclick="validateStep3()">Siguiente →</button></div>
         </div>
       </div>
 
@@ -468,11 +451,12 @@
       </div>
     </div>
 
-    <!-- ===== REGISTROS ===== -->
+    <!-- REGISTROS -->
     <div id="page-registros" class="page">
       <div class="topbar">
         <div class="topbar-left"><h2>Registros</h2><p>Historial completo de auditorías</p></div>
         <div class="topbar-right">
+          <button class="btn sm" onclick="retrySyncPending()" id="btn-retry-sync" style="display:none">↑ Reintentar pendientes</button>
           <button class="btn sm" onclick="reloadFromSheets()">↺ Actualizar</button>
           <button class="btn sm" onclick="exportCSV()">↓ CSV</button>
         </div>
@@ -498,7 +482,7 @@
       </div>
     </div>
 
-    <!-- ===== OBSERVACIONES ===== -->
+    <!-- OBSERVACIONES -->
     <div id="page-observaciones" class="page">
       <div class="topbar"><div class="topbar-left"><h2>Observaciones</h2><p>Seguimiento de desvíos y acciones</p></div></div>
       <div class="card">
@@ -509,7 +493,7 @@
       </div>
     </div>
 
-    <!-- ===== AGENTES ===== -->
+    <!-- AGENTES -->
     <div id="page-agentes" class="page">
       <div class="topbar"><div class="topbar-left"><h2>Desempeño por Agente</h2><p>Ranking y análisis de criterios</p></div></div>
       <div class="grid2">
@@ -522,7 +506,7 @@
       </div>
     </div>
 
-    <!-- ===== CONFIGURACIÓN ===== -->
+    <!-- CONFIGURACIÓN -->
     <div id="page-configuracion" class="page">
       <div class="topbar">
         <div class="topbar-left"><h2>Configuración</h2><p>Parámetros, agentes, auditores y criterios</p></div>
@@ -533,14 +517,13 @@
       </div>
       <div id="config-saved" class="alert success hidden">✓ Configuración guardada y sincronizada con Sheets.</div>
 
-      <!-- CONEXIÓN SHEETS -->
       <div class="card" style="margin-bottom:16px">
         <div class="card-header">
           <div><div class="card-title">Conexión Google Sheets</div><div class="card-sub">URL de la Web App de Apps Script</div></div>
           <div id="cfg-sheets-badge"></div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="cfg-sheets-url" style="flex:1;font-family:'DM Mono',monospace;font-size:12px"/>
+          <input type="text" id="cfg-sheets-url" style="flex:1;font-family:'DM Mono',monospace;font-size:12px" placeholder="https://script.google.com/macros/s/..."/>
           <button class="btn sm primary" onclick="saveConfigSheets()">Guardar</button>
           <button class="btn sm" onclick="testSheets()">Probar</button>
           <button class="btn sm" onclick="reloadFromSheets()">↺ Recargar</button>
@@ -548,7 +531,6 @@
       </div>
 
       <div class="grid2" style="margin-bottom:16px">
-        <!-- AGENTES -->
         <div class="card">
           <div class="card-header"><div><div class="card-title">Agentes</div><div class="card-sub">Aparecen en el selector del formulario</div></div></div>
           <div id="lista-agentes" style="margin-bottom:12px"></div>
@@ -557,7 +539,6 @@
             <button class="btn sm primary" onclick="addAgente()">+ Agregar</button>
           </div>
         </div>
-        <!-- AUDITORES -->
         <div class="card">
           <div class="card-header"><div><div class="card-title">Auditores</div><div class="card-sub">Quiénes completan auditorías</div></div></div>
           <div id="lista-auditores" style="margin-bottom:12px"></div>
@@ -568,7 +549,6 @@
         </div>
       </div>
 
-      <!-- PESOS PRODUCTIVIDAD + SCORE GENERAL -->
       <div class="grid2" style="margin-bottom:16px">
         <div class="card">
           <div class="card-header"><div><div class="card-title">Score General</div><div class="card-sub">Peso de calidad vs productividad (deben sumar 100%)</div></div></div>
@@ -607,7 +587,6 @@
         </div>
       </div>
 
-      <!-- PESOS PRODUCTIVIDAD -->
       <div class="card" style="margin-bottom:16px">
         <div class="card-header"><div><div class="card-title">Pesos de Productividad</div><div class="card-sub">Interacciones + Puntualidad + Presentismo = 100%</div></div></div>
         <div class="fg c3" style="gap:14px;margin-bottom:12px">
@@ -620,7 +599,6 @@
         <div id="cfg-pesos-prod-check" class="peso-sum err">Los pesos deben sumar 100%.</div>
       </div>
 
-      <!-- CRITERIOS DE CALIDAD -->
       <div class="card">
         <div class="card-header">
           <div><div class="card-title">Criterios de Calidad</div><div class="card-sub">Pesos editables — deben sumar exactamente 100%</div></div>
@@ -630,9 +608,7 @@
           </div>
         </div>
         <table class="cfg-table" id="cfg-criterios-table">
-          <thead><tr>
-            <th>Bloque</th><th>Criterio</th><th>Peso (%)</th><th>Activo</th>
-          </tr></thead>
+          <thead><tr><th>Bloque</th><th>Criterio</th><th>Peso (%)</th><th>Activo</th></tr></thead>
           <tbody id="cfg-criterios-tbody"></tbody>
         </table>
         <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -647,14 +623,33 @@
 
 <script>
 // ================================================================
-// STORE
+// STORE Y COLA OFFLINE
 // ================================================================
 const DB = { auditorias:[], nextId:1 };
+// FIX: cola de auditorias pendientes de sincronizar con Sheets
+let PENDING_QUEUE = [];
+
+function loadPendingQueue(){
+  try{ const s=localStorage.getItem("auditcs_pending"); if(s) PENDING_QUEUE=JSON.parse(s); }catch(e){}
+  updateOfflineBadge();
+}
+function savePendingQueue(){
+  try{ localStorage.setItem("auditcs_pending",JSON.stringify(PENDING_QUEUE)); }catch(e){}
+  updateOfflineBadge();
+}
+function updateOfflineBadge(){
+  const b=document.getElementById("offline-badge");
+  const btn=document.getElementById("btn-retry-sync");
+  if(!b) return;
+  const n=PENDING_QUEUE.length;
+  if(n>0){ b.textContent=n; b.classList.add("show"); if(btn) btn.style.display=""; }
+  else { b.classList.remove("show"); if(btn) btn.style.display="none"; }
+}
 
 // ================================================================
-// CONFIG (fuente de verdad: Sheets)
+// CONFIG
 // ================================================================
-const CFG_KEY = "auditcs_cfg_v4";
+const CFG_KEY = "auditcs_cfg_v5";
 let CFG = {
   sheets_url:"",
   agentes:["Agostina Moya","Rodrigo Arrieta","Luciana Zurita","Lucas Veliz","Julieta Gallardo","Tania Cazorla","Santiago Jerez","Rodrigo Bacchi"],
@@ -666,7 +661,6 @@ let CFG = {
   w_calidad:50, w_productividad:50,
 };
 
-// Criterios de calidad — editables
 let CRITERIOS = [
   {cod:"COM_SALUDO",      bloque:"Comunicacion", nombre:"Saludo inicial",                        peso:2,  activo:true},
   {cod:"COM_TONO",        bloque:"Comunicacion", nombre:"Tono de voz / Lenguaje apropiado",      peso:4,  activo:true},
@@ -683,13 +677,14 @@ let CRITERIOS = [
 ];
 const CRITERIOS_DEFAULT = JSON.parse(JSON.stringify(CRITERIOS));
 
+// FIX: snapshot de criterios al iniciar paso 2 — evita que cambios en config afecten formulario activo
+let _criteriosSnapshot = null;
+
 function loadLocalCfg(){
   try{ const s=localStorage.getItem(CFG_KEY); if(s){ const p=JSON.parse(s); if(p.sheets_url) CFG.sheets_url=p.sheets_url; } }catch(e){}
 }
 function persistUrl(){ try{ localStorage.setItem(CFG_KEY,JSON.stringify({sheets_url:CFG.sheets_url})); }catch(e){} }
-function getNextId_local(){
-  try{ return parseInt(localStorage.getItem("auditcs_nextid"))||1; }catch(e){ return DB.nextId||1; }
-}
+function getNextId_local(){ try{ return parseInt(localStorage.getItem("auditcs_nextid"))||1; }catch(e){ return DB.nextId||1; } }
 function persistNextId(){ try{ localStorage.setItem("auditcs_nextid",String(DB.nextId)); }catch(e){} }
 
 // ================================================================
@@ -702,32 +697,92 @@ const estadoBadge = e => e==="Excelente"?"badge-excelente":e==="Correcta"?"badge
 const estadoSB = e => e==="Excelente"?"sb-green":e==="Correcta"?"sb-amber":"sb-red";
 const calcGeneral = (cal,prod) => Math.round((cal*CFG.w_calidad + prod*CFG.w_productividad)/100);
 const calcObjetivo = hs => hs ? Math.round(Number(hs)*(CFG.tickets_base/CFG.horas_base)) : 0;
-const activeCriterios = () => CRITERIOS.filter(c=>c.activo);
+// FIX: activeCriterios siempre usa el snapshot si está activo (formulario en curso)
+const activeCriterios = () => (_criteriosSnapshot||CRITERIOS).filter(c=>c.activo);
 const v = id => { const el=document.getElementById(id); return el?el.value:""; };
+
+// FIX: semana ISO desde fecha
+function getISOWeek(dateStr){
+  if(!dateStr) return "";
+  const d=new Date(dateStr+"T12:00:00");
+  const temp=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  temp.setUTCDate(temp.getUTCDate()+4-(temp.getUTCDay()||7));
+  const yearStart=new Date(Date.UTC(temp.getUTCFullYear(),0,1));
+  return String(Math.ceil((((temp-yearStart)/86400000)+1)/7));
+}
+
+// FIX: actualiza mes y semana automáticamente al cambiar fecha
+function onFechaChange(){
+  const fecha=v("f-fecha");
+  if(!fecha) return;
+  const meses=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const d=new Date(fecha+"T12:00:00");
+  document.getElementById("f-mes").value=meses[d.getMonth()];
+  document.getElementById("f-semana").value=getISOWeek(fecha);
+  updateHorasBanner();
+  updateSemanaCount();
+}
 
 // ================================================================
 // SYNC BAR
 // ================================================================
 let _sTimer=null;
-function showSync(msg){ document.getElementById("sync-bar-msg").textContent=msg; document.getElementById("sync-bar").classList.add("show"); clearTimeout(_sTimer); }
-function hideSync(msg,d=2200){ document.getElementById("sync-bar-msg").textContent=msg; _sTimer=setTimeout(()=>document.getElementById("sync-bar").classList.remove("show"),d); }
+function showSync(msg){ const sb=document.getElementById("sync-bar"); sb.classList.remove("err"); sb.querySelector("#sync-bar-msg").textContent=msg; sb.classList.add("show"); clearTimeout(_sTimer); }
+function hideSync(msg,d=2200,isErr=false){ const sb=document.getElementById("sync-bar"); if(isErr) sb.classList.add("err"); sb.querySelector("#sync-bar-msg").textContent=msg; _sTimer=setTimeout(()=>sb.classList.remove("show"),d); }
 
 // ================================================================
 // FETCH HELPERS
 // ================================================================
-const go = (url, timeout=15000) => {
+const go = (url, timeout=18000) => {
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),timeout);
   return fetch(url,{redirect:"follow",signal:controller.signal}).finally(()=>clearTimeout(timer));
 };
+
+// FIX: postSheets con CORS real — lee el response body para detectar errores reales del script
 async function postSheets(payload){
-  if(!CFG.sheets_url) return {ok:false};
+  if(!CFG.sheets_url) return {ok:false, reason:"no_url"};
   showSync("Enviando a Google Sheets...");
   try{
-    await fetch(CFG.sheets_url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-    hideSync("✓ Guardado en Sheets");
-    return {ok:true};
-  }catch(e){ hideSync("⚠ Error al enviar"); return {ok:false}; }
+    const res=await fetch(CFG.sheets_url,{
+      method:"POST",
+      mode:"cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(payload)
+    });
+    if(!res.ok){ hideSync("⚠ Error HTTP "+res.status,3000,true); return {ok:false,reason:"http_"+res.status}; }
+    const data=await res.json().catch(()=>null);
+    if(data&&data.status==="ok"){ hideSync("✓ Guardado en Sheets"); return {ok:true}; }
+    const msg=data?.message||"Error desconocido";
+    hideSync("⚠ "+msg,3500,true);
+    return {ok:false,reason:msg};
+  }catch(e){
+    hideSync("⚠ Sin conexión — guardado local",3000,true);
+    return {ok:false,reason:e.message};
+  }
+}
+
+// FIX: reintento de cola pendiente
+async function retrySyncPending(){
+  if(!PENDING_QUEUE.length){ alert("No hay registros pendientes."); return; }
+  if(!CFG.sheets_url){ alert("Configurá la URL de Sheets primero."); return; }
+  showSync(`Reintentando ${PENDING_QUEUE.length} registros...`);
+  const retry=[...PENDING_QUEUE];
+  PENDING_QUEUE=[];
+  savePendingQueue();
+  let fail=0;
+  for(const payload of retry){
+    const res=await postSheets(payload);
+    if(!res.ok){ PENDING_QUEUE.push(payload); fail++; }
+    else {
+      const aud=DB.auditorias.find(a=>a.id_auditoria===payload.id_auditoria);
+      if(aud) aud.sheets_enviado=true;
+    }
+  }
+  savePendingQueue();
+  renderRegistros();
+  if(fail===0) hideSync(`✓ Todos sincronizados`);
+  else hideSync(`⚠ ${fail} registros aún pendientes`,3000,true);
 }
 
 // ================================================================
@@ -737,12 +792,12 @@ async function reloadFromSheets(){
   const ov=document.getElementById("loading-overlay");
   const msg=document.getElementById("loading-msg");
   const sub=document.getElementById("loading-sub");
-  if(!CFG.sheets_url){ 
-    ov.style.display="none"; 
-    updateSheetsUI("disconnected"); 
+  if(!CFG.sheets_url){
+    ov.style.display="none";
+    updateSheetsUI("disconnected");
     populateSelects();
-    renderDashboard(); 
-    return; 
+    renderDashboard();
+    return;
   }
   ov.style.display="flex"; msg.textContent="Cargando datos desde Google Sheets..."; sub.textContent="Esto puede tardar unos segundos";
   try{
@@ -753,16 +808,12 @@ async function reloadFromSheets(){
       go(CFG.sheets_url+"?action=get_criterios"),
     ]);
     msg.textContent="Procesando...";
-    // Config
     if(cfgR.ok){ const d=await cfgR.json(); if(d.status==="ok"&&d.config){ applyCfg(d.config); } }
-    // Auditorías
     let auds=[];
     if(audR.ok){ const d=await audR.json(); if(d.status==="ok") auds=d.auditorias||[]; }
-    // Detalle criterios
     let det={};
     if(detR.ok){ const d=await detR.json(); if(d.status==="ok") det=d.detalle||{}; }
     auds.forEach(a=>{ a.criterios=det[a.id_auditoria]||[]; });
-    // Criterios de calidad editables
     if(critR.ok){ const d=await critR.json(); if(d.status==="ok"&&d.criterios?.length) CRITERIOS=d.criterios; }
     DB.auditorias=auds;
     const maxId=auds.reduce((m,a)=>Math.max(m,parseInt(String(a.id_auditoria).replace("AUD-",""))||0),0);
@@ -827,9 +878,6 @@ async function testSheets(){
   }catch(e){ badge.innerHTML=`<span class="badge badge-observada">✗ ${e.message}</span>`; }
 }
 
-// ================================================================
-// SYNC CONFIG → SHEETS
-// ================================================================
 async function syncConfigToSheets(accion,det){
   await postSheets({
     _type:"config_change", accion,
@@ -871,10 +919,8 @@ function populateSelects(){
   const fau=document.getElementById("f-auditor"); if(fau) fau.innerHTML=opts(CFG.auditores,"— Seleccionar —");
   const ff=document.getElementById("filter-agente"); if(ff) ff.innerHTML=opts(CFG.agentes,"Todos los agentes");
   const sd=document.getElementById("sel-agente-detail"); if(sd) sd.innerHTML=opts(CFG.agentes,"— Seleccionar agente —");
-  // Semanas disponibles para filtro
   const semanas=[...new Set(DB.auditorias.map(a=>a.semana).filter(Boolean))].sort((a,b)=>Number(a)-Number(b));
   const fsem=document.getElementById("filter-semana"); if(fsem) fsem.innerHTML='<option value="">Todas las semanas</option>'+semanas.map(s=>`<option value="${s}">Semana ${s}</option>`).join("");
-  // Sidebar info
   document.getElementById("sidebar-info").innerHTML=`Responsable: ${CFG.auditores[0]||"—"}<br>Epic: Servicio al Cliente<br>${CFG.muestras_semana} muestras / agente / semana`;
 }
 
@@ -893,16 +939,52 @@ function goStep(n){
 }
 
 function validateStep1(){
-  const req=["f-auditor","f-fecha","f-agente","f-ticket","f-canal","f-tipo","f-horas","f-semana"];
+  const req=["f-auditor","f-fecha","f-agente","f-ticket","f-canal","f-tipo","f-horas"];
   for(const id of req){
     const el=document.getElementById(id);
     if(!el.value.trim()){ el.classList.add("error"); el.focus(); setTimeout(()=>el.classList.remove("error"),2000); return; }
   }
+  // FIX: detectar posible duplicado por agente + ticket antes de avanzar
+  const agente=v("f-agente"), ticket=v("f-ticket").trim();
+  const dup=DB.auditorias.find(a=>a.agente===agente && String(a.ticket)===ticket);
+  const alertEl=document.getElementById("duplicate-alert");
+  if(dup){
+    alertEl.classList.remove("hidden");
+    alertEl.innerHTML=`⚠ Ya existe una auditoría para <strong>${agente}</strong> con el ticket <strong>${ticket}</strong> (${dup.id_auditoria} · ${dup.fecha_auditoria}). ¿Querés continuar de todas formas? <button class="btn xs" onclick="goStep(2)" style="margin-left:10px">Continuar igual</button>`;
+    return;
+  }
+  alertEl.classList.add("hidden");
   goStep(2);
 }
 
+// FIX: validateStep2 — todos los criterios activos deben estar evaluados
+function validateStep2(){
+  const active=activeCriterios();
+  const faltantes=active.filter(c=>!document.querySelector(`input[name="crit-${c.cod}"]:checked`));
+  const alertEl=document.getElementById("criterios-incomplete-alert");
+  if(faltantes.length){
+    alertEl.classList.remove("hidden");
+    alertEl.innerHTML=`⚠ Faltan evaluar ${faltantes.length} criterio${faltantes.length>1?"s":""}: <strong>${faltantes.map(c=>c.nombre).join(", ")}</strong>`;
+    return;
+  }
+  alertEl.classList.add("hidden");
+  goStep(3);
+}
+
+// FIX: validateStep3 — interacciones reales obligatorias
+function validateStep3(){
+  const inter=document.getElementById("p-inter");
+  if(!inter.value.trim()||isNaN(Number(inter.value))||Number(inter.value)<0){
+    inter.classList.add("error");
+    inter.focus();
+    setTimeout(()=>inter.classList.remove("error"),2000);
+    return;
+  }
+  goStep(4);
+}
+
 // ================================================================
-// HORAS
+// HORAS + FECHA
 // ================================================================
 function updateHorasBanner(){
   const hs=document.getElementById("f-horas").value;
@@ -945,8 +1027,9 @@ function makeCriterioRow(c){
 
 function renderCriterios(){
   if(!CRITERIOS.length) CRITERIOS=JSON.parse(JSON.stringify(CRITERIOS_DEFAULT));
+  // FIX: tomar snapshot inmutable de CRITERIOS al entrar al paso 2
+  _criteriosSnapshot=JSON.parse(JSON.stringify(CRITERIOS));
   const active=activeCriterios();
-  // Render Comunicación
   const comCont=document.getElementById("criterios-comunicacion");
   const comWrap=document.getElementById("criterios-comunicacion-wrap");
   if(comCont){
@@ -954,7 +1037,6 @@ function renderCriterios(){
     comCont.innerHTML="";
     active.filter(c=>c.bloque==="Comunicacion").forEach(c=>comCont.appendChild(makeCriterioRow(c)));
   }
-  // Render Gestión
   const gesCont=document.getElementById("criterios-gestion");
   const gesWrap=document.getElementById("criterios-gestion-wrap");
   if(gesCont){
@@ -971,15 +1053,15 @@ function onCritChange(cod,peso){
   document.getElementById("btn-yes-"+cod)?.classList.toggle("selected",peso>0);
   document.getElementById("btn-no-"+cod)?.classList.toggle("selected",peso===0);
   updateCalidadTotal();
+  // limpiar alerta de incompletos si ya va bien
+  const faltantes=activeCriterios().filter(c=>!document.querySelector(`input[name="crit-${c.cod}"]:checked`));
+  if(!faltantes.length) document.getElementById("criterios-incomplete-alert")?.classList.add("hidden");
 }
 
 function updateCalidadTotal(){
   const active=activeCriterios();
   let total=0, eval_=0;
-  active.forEach(c=>{
-    const ch=document.querySelector(`input[name="crit-${c.cod}"]:checked`);
-    if(ch){ eval_++; if(ch.value==="si") total+=c.peso; }
-  });
+  active.forEach(c=>{ const ch=document.querySelector(`input[name="crit-${c.cod}"]:checked`); if(ch){ eval_++; if(ch.value==="si") total+=c.peso; }});
   document.getElementById("sc-puntaje").textContent=total+"%";
   document.getElementById("sc-criterios").textContent=eval_+"/"+active.length;
   document.getElementById("sc-pct").textContent=total+"%";
@@ -1030,17 +1112,27 @@ function calcProd(){
   const pP=CFG.obj_puntual>0?Math.min(100,Math.round(Math.max(0,CFG.obj_puntual-tarde)/CFG.obj_puntual*100)):100;
   const pR=CFG.obj_present>0?Math.min(100,Math.round(Math.max(0,CFG.obj_present-faltas)/CFG.obj_present*100)):100;
   const total=Math.round((pI*CFG.w_inter+pP*CFG.w_puntual+pR*CFG.w_present)/100);
-  const col=v=>v>=80?"var(--green)":v>=60?"var(--amber)":"var(--red)";
+  const col=x=>x>=80?"var(--green)":x>=60?"var(--amber)":"var(--red)";
   [["pct-inter",pI],["pct-puntual",pP],["pct-present",pR]].forEach(([id,val])=>{
     const el=document.getElementById(id); if(el){ el.textContent=val+"%"; el.style.color=col(val); }
   });
   document.getElementById("pp-inter").textContent=pI+"%";
   document.getElementById("pp-asist").textContent=Math.round((pP+pR)/2)+"%";
   document.getElementById("pp-total").textContent=total+"%";
+  return total;
 }
 
-let _lastProd=0;
-function getProd(){ const el=document.getElementById("pp-total"); const v=el&&el.textContent!=="—"?parseInt(el.textContent)||0:0; return v; }
+// FIX: getProd() calcula desde inputs — no depende del DOM de texto
+function getProd(){
+  const hs=v("f-horas"), obj=calcObjetivo(hs);
+  const inter=Number(v("p-inter"))||0;
+  const tarde=Number(v("p-tarde"))||0;
+  const faltas=Number(v("p-faltas"))||0;
+  const pI=obj>0?Math.min(100,Math.round(inter/obj*100)):0;
+  const pP=CFG.obj_puntual>0?Math.min(100,Math.round(Math.max(0,CFG.obj_puntual-tarde)/CFG.obj_puntual*100)):100;
+  const pR=CFG.obj_present>0?Math.min(100,Math.round(Math.max(0,CFG.obj_present-faltas)/CFG.obj_present*100)):100;
+  return Math.round((pI*CFG.w_inter+pP*CFG.w_puntual+pR*CFG.w_present)/100);
+}
 
 // ================================================================
 // RESUMEN
@@ -1052,7 +1144,7 @@ function renderResumen(){
   const hs=v("f-horas"), obj=calcObjetivo(hs);
   const sheetsLine=CFG.sheets_url
     ?`<span style="color:var(--green);font-size:12px">✓ Se enviará a Google Sheets automáticamente</span>`
-    :`<span style="color:var(--amber);font-size:12px">⚠ Sheets no configurado</span>`;
+    :`<span style="color:var(--amber);font-size:12px">⚠ Sheets no configurado — se guardará local</span>`;
   document.getElementById("resumen-content").innerHTML=`
     <div class="score-summary" style="margin-bottom:18px">
       <div><div class="ss-value" style="color:var(--accent)">${cal}%</div><div class="ss-label">Calidad (${CFG.w_calidad}%)</div></div>
@@ -1104,7 +1196,6 @@ async function submitAuditoria(){
     obs_accion:v("f-obs-accion"), resp_seguimiento:v("f-resp-seg"),
     criterios:getCriterioDetalle(),
     sheets_enviado:false,
-    // Pasar pesos al script para que calcule productividad correctamente
     obj_puntual:CFG.obj_puntual, obj_present:CFG.obj_present,
     w_inter:CFG.w_inter, w_puntual:CFG.w_puntual, w_present:CFG.w_present,
     w_calidad:CFG.w_calidad, w_productividad:CFG.w_productividad,
@@ -1112,32 +1203,44 @@ async function submitAuditoria(){
   };
   DB.auditorias.push(aud);
   const res=await postSheets(aud);
-  aud.sheets_enviado=res.ok;
+  if(res.ok){
+    aud.sheets_enviado=true;
+  } else {
+    // FIX: encolar offline si falla el envío
+    PENDING_QUEUE.push(aud);
+    savePendingQueue();
+  }
   const alertEl=document.getElementById("form-alert");
-  alertEl.className="alert success"; alertEl.classList.remove("hidden");
-  alertEl.textContent=`✓ ${id} registrada${res.ok?" y enviada a Sheets":" (guardada local — error Sheets)"}.`;
-  setTimeout(()=>alertEl.classList.add("hidden"),6000);
-  resetForm(); btn.disabled=false; btn.textContent="✓ Registrar y enviar a Sheets";
+  alertEl.className=res.ok?"alert success":"alert warning";
+  alertEl.classList.remove("hidden");
+  alertEl.textContent=res.ok?`✓ ${id} registrada y enviada a Sheets.`:`⚠ ${id} guardada localmente. Se reintentará cuando haya conexión.`;
+  setTimeout(()=>alertEl.classList.add("hidden"),7000);
+  // FIX: limpiar snapshot de criterios del formulario
+  _criteriosSnapshot=null;
+  resetForm();
+  btn.disabled=false; btn.textContent="✓ Registrar y enviar a Sheets";
   populateSelects(); renderDashboard();
 }
 
 function resetForm(){
   document.querySelectorAll("#page-formulario input,#page-formulario select,#page-formulario textarea").forEach(el=>{
-    if(el.type==="radio") el.checked=false; else el.value="";
+    if(el.type==="radio") el.checked=false;
+    else if(!el.readOnly&&!el.disabled) el.value="";
   });
   document.querySelectorAll(".radio-btn").forEach(b=>b.classList.remove("selected"));
   document.querySelectorAll(".criteria-score").forEach(el=>{ el.textContent="—"; el.style.color="var(--hint)"; });
   document.getElementById("horas-preview").innerHTML='<span style="color:var(--hint)">Ingresá las horas para ver el objetivo</span>';
   document.getElementById("semana-count-alert").classList.add("hidden");
-  // Reset tabs: clear all done/active, restore tab-1
+  document.getElementById("duplicate-alert").classList.add("hidden");
+  document.getElementById("criterios-incomplete-alert")?.classList.add("hidden");
   document.querySelectorAll(".step-tab").forEach(t=>t.classList.remove("done","active"));
   document.getElementById("tab-1").classList.add("active");
-  // Show step-1 directly without triggering renderCriterios
   document.querySelectorAll(".form-step").forEach(s=>s.classList.remove("active"));
   document.getElementById("step-1").classList.add("active");
-  document.getElementById("f-fecha").value=new Date().toISOString().slice(0,10);
-  const meses=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  document.getElementById("f-mes").value=meses[new Date().getMonth()];
+  // Resetear fecha + mes + semana
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById("f-fecha").value=today;
+  onFechaChange();
 }
 
 // ================================================================
@@ -1172,7 +1275,6 @@ function renderDashboard(){
   mEl("m-general").textContent=gAvg+"%";
   const U=getUMB();
   mEl("m-general").className="metric-value "+(gAvg>=U.excelente?"green":gAvg>=U.correcta?"":"red");
-
   const agents={};
   data.forEach(a=>{ if(!agents[a.agente]) agents[a.agente]=[]; agents[a.agente].push(a.general); });
   const agL=Object.keys(agents), agD=agL.map(ag=>avg(agents[ag]));
@@ -1183,8 +1285,10 @@ function renderDashboard(){
   renderDesvios(data);
 }
 
+// FIX: usar Chart.getChart() para evitar canvas zombie
 function renderCharts(agL,agD,evoL,evoD,est){
-  ["A","E","S"].forEach(k=>{ if(_charts[k]){ _charts[k].destroy(); delete _charts[k]; }});
+  const destroyChart=(canvasId)=>{ const ch=Chart.getChart(canvasId); if(ch) ch.destroy(); };
+  destroyChart("chart-agentes"); destroyChart("chart-evolucion"); destroyChart("chart-estados");
   const U=getUMB();
   const canvA=document.getElementById("chart-agentes"); if(!canvA) return;
   _charts.A=new Chart(canvA,{type:"bar",data:{labels:agL,datasets:[{data:agD,backgroundColor:agD.map(pct=>pct>=U.excelente?"#15803D":pct>=U.correcta?"#1D4ED8":"#DC2626"),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:pct=>pct+"%"},grid:{color:"rgba(0,0,0,.04)"}},x:{grid:{display:false},ticks:{font:{size:11}}}}}});
@@ -1225,7 +1329,7 @@ function renderRegistros(){
     if(sem&&String(a.semana)!==String(sem)) return false;
     return true;
   });
-  document.getElementById("registros-count").textContent=`Mostrando ${data.length} de ${DB.auditorias.length} registros`;
+  document.getElementById("registros-count").textContent=`Mostrando ${data.length} de ${DB.auditorias.length} registros${PENDING_QUEUE.length?` · ⚠ ${PENDING_QUEUE.length} pendiente${PENDING_QUEUE.length>1?"s":""}`:""}.`;
   const tbody=document.getElementById("tbody-registros");
   if(!data.length){ tbody.innerHTML='<tr><td colspan="13" style="text-align:center;color:var(--hint);padding:24px">Sin registros.</td></tr>'; return; }
   tbody.innerHTML=data.map(a=>`<tr>
@@ -1239,7 +1343,7 @@ function renderRegistros(){
     <td style="font-family:'DM Mono',monospace;text-align:center">${a.productividad}%</td>
     <td style="font-family:'DM Mono',monospace;font-weight:700;text-align:center">${a.general}%</td>
     <td><span class="badge ${estadoBadge(a.estado)}">${a.estado}</span></td>
-    <td>${a.sheets_enviado?'<span class="badge badge-ok">✓ Sheets</span>':'<span class="badge badge-local">Local</span>'}</td>
+    <td>${a.sheets_enviado?'<span class="badge badge-ok">✓ Sheets</span>':'<span class="badge badge-local">Pendiente</span>'}</td>
     <td><button class="btn xs danger" onclick="deleteAuditoria('${a.id_auditoria}')">✕</button></td>
   </tr>`).join("");
 }
@@ -1292,7 +1396,6 @@ function renderAgentes(){
       <div style="font-size:13px;font-family:'DM Mono',monospace;font-weight:700;color:${col};min-width:38px;text-align:right">${a.gen}%</div>
     </div>`;
   }).join("");
-
 }
 
 function renderAgentDetail(){
@@ -1307,7 +1410,7 @@ function renderAgentDetail(){
     fail[c.nombre].total++; if(c.cumple==="No") fail[c.nombre].no++;
   }));
   const sorted=Object.entries(fail).sort((a,b)=>b[1].no-a[1].no);
-  cont.innerHTML=`<p style="font-size:12px;color:var(--muted);margin-bottom:10px">${auds.length} auditoría${auds.length!==1?"s":""} registradas · General prom.: ${avg(auds.map(a=>a.general))}%</p>`+
+  cont.innerHTML=`<p style="font-size:12px;color:var(--muted);margin-bottom:10px">${auds.length} auditoría${auds.length!==1?"s":""} · General prom.: ${avg(auds.map(a=>a.general))}%</p>`+
     sorted.map(([n,d])=>{
       const pct=d.total>0?Math.round(d.no/d.total*100):0;
       const col=pct>50?"var(--red)":pct>20?"var(--amber)":"var(--green)";
@@ -1339,14 +1442,12 @@ function renderConfigPage(){
   renderListaAgentes(); renderListaAuditores();
   renderCriteriosConfig();
   checkPesosProd(); checkPesosGeneral();
-  // Sheets badge
   const badge=document.getElementById("cfg-sheets-badge");
   if(badge) badge.innerHTML=CFG.sheets_url?'<span class="badge badge-excelente">✓ Conectado</span>':'<span class="badge badge-observada">✗ Sin URL</span>';
 }
 
 function renderListaAgentes(){
-  const cont=document.getElementById("lista-agentes");
-  if(!cont) return;
+  const cont=document.getElementById("lista-agentes"); if(!cont) return;
   if(!CFG.agentes.length){ cont.innerHTML='<p style="color:var(--hint);font-size:12px;padding:8px 0">Sin agentes.</p>'; return; }
   cont.innerHTML=CFG.agentes.map((a,i)=>`
     <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
@@ -1356,8 +1457,7 @@ function renderListaAgentes(){
     </div>`).join("");
 }
 function renderListaAuditores(){
-  const cont=document.getElementById("lista-auditores");
-  if(!cont) return;
+  const cont=document.getElementById("lista-auditores"); if(!cont) return;
   if(!CFG.auditores.length){ cont.innerHTML='<p style="color:var(--hint);font-size:12px;padding:8px 0">Sin auditores.</p>'; return; }
   cont.innerHTML=CFG.auditores.map((a,i)=>`
     <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
@@ -1370,8 +1470,7 @@ function renderListaAuditores(){
 // CRITERIOS CONFIG TABLE
 // ================================================================
 function renderCriteriosConfig(){
-  const tbody=document.getElementById("cfg-criterios-tbody");
-  if(!tbody) return;
+  const tbody=document.getElementById("cfg-criterios-tbody"); if(!tbody) return;
   tbody.innerHTML=CRITERIOS.map((c,i)=>{
     const tagClass=c.bloque==="Comunicacion"?"tag-com":"tag-ges";
     const tagLabel=c.bloque==="Comunicacion"?"Com.":"Gest.";
@@ -1379,9 +1478,7 @@ function renderCriteriosConfig(){
       <td><span class="bloque-tag ${tagClass}">${tagLabel}</span></td>
       <td style="font-size:13px;font-weight:500">${c.nombre}</td>
       <td><input type="number" min="0" max="100" value="${c.peso}" id="cpeso-${i}" oninput="updateCriteriosPeso()" style="width:72px;text-align:center"/></td>
-      <td>
-        <label class="toggle"><input type="checkbox" id="cactivo-${i}" ${c.activo?"checked":""}><div class="toggle-slider"></div></label>
-      </td>
+      <td><label class="toggle"><input type="checkbox" id="cactivo-${i}" ${c.activo?"checked":""}><div class="toggle-slider"></div></label></td>
     </tr>`;
   }).join("");
   updateCriteriosPeso();
@@ -1389,15 +1486,9 @@ function renderCriteriosConfig(){
 
 function updateCriteriosPeso(){
   let sum=0;
-  CRITERIOS.forEach((c,i)=>{
-    const el=document.getElementById("cpeso-"+i);
-    if(el) sum+=Number(el.value)||0;
-  });
+  CRITERIOS.forEach((c,i)=>{ const el=document.getElementById("cpeso-"+i); if(el) sum+=Number(el.value)||0; });
   const el=document.getElementById("criterios-peso-total");
-  if(el){
-    el.textContent=`Suma: ${sum}%`;
-    el.className=sum===100?"peso-sum ok":"peso-sum err";
-  }
+  if(el){ el.textContent=`Suma: ${sum}%`; el.className=sum===100?"peso-sum ok":"peso-sum err"; }
 }
 
 function resetCriteriosDefault(){
@@ -1407,14 +1498,13 @@ function resetCriteriosDefault(){
 }
 
 async function saveCriterios(){
-  // Leer tabla y actualizar CRITERIOS en memoria
   CRITERIOS=CRITERIOS.map((c,i)=>{
     const peso=Number(document.getElementById("cpeso-"+i)?.value)||0;
     const activo=document.getElementById("cactivo-"+i)?.checked!==false;
     return {...c, peso, activo};
   });
   const sum=CRITERIOS.reduce((s,c)=>s+c.peso,0);
-  if(sum!==100){ alert(`Los pesos de criterios deben sumar exactamente 100%. Suma actual: ${sum}%`); return; }
+  if(sum!==100){ alert(`Los pesos deben sumar exactamente 100%. Suma actual: ${sum}%`); return; }
   const st=document.getElementById("criterios-save-status");
   if(st) st.textContent="Enviando...";
   const res=await postSheets({_type:"update_criterios", criterios:CRITERIOS});
@@ -1440,7 +1530,6 @@ function checkPesosGeneral(){
   const sum=wc+wp;
   const el=document.getElementById("cfg-pesos-general-check");
   if(el){ el.textContent=sum===100?`✓ Correcto. Calidad ${wc}% + Productividad ${wp}% = 100%`:`⚠ Suman ${sum}% (deben ser 100%).`; el.className=sum===100?"peso-sum ok":"peso-sum err"; }
-  // Barra visual
   const bc=document.getElementById("gpb-cal"), bp=document.getElementById("gpb-prod");
   const pc=document.getElementById("gpb-cal-pct"), pp=document.getElementById("gpb-prod-pct");
   if(bc&&bp){ bc.style.flex=wc; bp.style.flex=Math.max(0,100-wc); }
@@ -1521,7 +1610,7 @@ function exportCSV(){
   const h=["id_auditoria","fecha_auditoria","auditor","agente","ticket","canal","tipo","mes","semana","horas_trabajadas","objetivo_interacciones","interacciones_reales","dias_tarde","dias_faltas","calidad","productividad","general","estado","requiere_seguimiento","obs_general","obs_accion","sheets_enviado"];
   const rows=DB.auditorias.map(a=>h.map(k=>{ const val=a[k]??""; return typeof val==="string"&&val.includes(",")?"\""+val.replace(/"/g,"'")+"\"":(String(val).includes(",")?"\""+val+"\"":val); }));
   const csv=[h,...rows].map(r=>r.join(",")).join("\n");
-  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
   const url=URL.createObjectURL(blob);
   const link=document.createElement("a");
   link.href=url;
@@ -1537,9 +1626,10 @@ function exportCSV(){
 // ================================================================
 (function init(){
   loadLocalCfg();
-  document.getElementById("f-fecha").value=new Date().toISOString().slice(0,10);
-  const meses=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  document.getElementById("f-mes").value=meses[new Date().getMonth()];
+  loadPendingQueue();
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById("f-fecha").value=today;
+  onFechaChange(); // setea mes + semana automáticamente
   populateSelects();
   reloadFromSheets();
 })();
