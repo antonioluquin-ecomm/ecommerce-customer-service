@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AuditCS | Customer Service</title>
+  <title>AuditCS | Customer Service v9</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <style>
@@ -230,7 +230,7 @@
   <aside class="sidebar">
     <div class="logo-area">
       <h1>AuditCS</h1>
-      <span>Customer Service · v5.0</span>
+      <span>Customer Service · v9.0</span>
     </div>
     <nav class="nav">
       <div class="nav-section">Reportes</div>
@@ -263,7 +263,7 @@
       <div style="height:6px"></div>
       <button class="sheets-btn disconnected" id="sheets-btn" onclick="reloadFromSheets()">
         <div class="sheets-dot"></div>
-        <span id="sheets-label">Cargando...</span>
+        <span id="sheets-label">Conectando...</span>
       </button>
     </nav>
     <div class="sidebar-footer">
@@ -688,7 +688,7 @@ function loadLocalCfg(){
 }
 function persistUrl(){ try{ localStorage.setItem(CFG_KEY,JSON.stringify({sheets_url:CFG.sheets_url})); }catch(e){} }
 function getNextId_local(){
-  try{ return parseInt(localStorage.getItem("auditcs_nextid"))||1; }catch(e){return 1;}
+  try{ return parseInt(localStorage.getItem("auditcs_nextid"))||1; }catch(e){ return DB.nextId||1; }
 }
 function persistNextId(){ try{ localStorage.setItem("auditcs_nextid",String(DB.nextId)); }catch(e){} }
 
@@ -715,7 +715,11 @@ function hideSync(msg,d=2200){ document.getElementById("sync-bar-msg").textConte
 // ================================================================
 // FETCH HELPERS
 // ================================================================
-const go = url => fetch(url,{redirect:"follow"});
+const go = (url, timeout=15000) => {
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),timeout);
+  return fetch(url,{redirect:"follow",signal:controller.signal}).finally(()=>clearTimeout(timer));
+};
 async function postSheets(payload){
   if(!CFG.sheets_url) return {ok:false};
   showSync("Enviando a Google Sheets...");
@@ -733,7 +737,13 @@ async function reloadFromSheets(){
   const ov=document.getElementById("loading-overlay");
   const msg=document.getElementById("loading-msg");
   const sub=document.getElementById("loading-sub");
-  if(!CFG.sheets_url){ ov.style.display="none"; updateSheetsUI("disconnected"); return; }
+  if(!CFG.sheets_url){ 
+    ov.style.display="none"; 
+    updateSheetsUI("disconnected"); 
+    populateSelects();
+    renderDashboard(); 
+    return; 
+  }
   ov.style.display="flex"; msg.textContent="Cargando datos desde Google Sheets..."; sub.textContent="Esto puede tardar unos segundos";
   try{
     const [cfgR,audR,detR,critR] = await Promise.all([
@@ -839,7 +849,7 @@ async function syncConfigToSheets(accion,det){
 // ================================================================
 // NAV
 // ================================================================
-const PAGE_MAP={dashboard:0,formulario:1,registros:2,observaciones:3,agentes:4,configuracion:5};
+const PAGE_MAP={dashboard:0,agentes:1,observaciones:2,formulario:3,registros:4,configuracion:5};
 function showPage(id){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
@@ -860,7 +870,7 @@ function populateSelects(){
   const fa=document.getElementById("f-agente"); if(fa) fa.innerHTML=opts(CFG.agentes,"— Seleccionar —");
   const fau=document.getElementById("f-auditor"); if(fau) fau.innerHTML=opts(CFG.auditores,"— Seleccionar —");
   const ff=document.getElementById("filter-agente"); if(ff) ff.innerHTML=opts(CFG.agentes,"Todos los agentes");
-  const sd=document.getElementById("sel-agente-detail"); if(sd) sd.innerHTML=opts([],"— Seleccionar agente —");
+  const sd=document.getElementById("sel-agente-detail"); if(sd) sd.innerHTML=opts(CFG.agentes,"— Seleccionar agente —");
   // Semanas disponibles para filtro
   const semanas=[...new Set(DB.auditorias.map(a=>a.semana).filter(Boolean))].sort((a,b)=>Number(a)-Number(b));
   const fsem=document.getElementById("filter-semana"); if(fsem) fsem.innerHTML='<option value="">Todas las semanas</option>'+semanas.map(s=>`<option value="${s}">Semana ${s}</option>`).join("");
@@ -934,6 +944,7 @@ function makeCriterioRow(c){
 }
 
 function renderCriterios(){
+  if(!CRITERIOS.length) CRITERIOS=JSON.parse(JSON.stringify(CRITERIOS_DEFAULT));
   const active=activeCriterios();
   // Render Comunicación
   const comCont=document.getElementById("criterios-comunicacion");
@@ -1028,7 +1039,8 @@ function calcProd(){
   document.getElementById("pp-total").textContent=total+"%";
 }
 
-function getProd(){ const el=document.getElementById("pp-total"); return el&&el.textContent!=="—"?parseInt(el.textContent)||0:0; }
+let _lastProd=0;
+function getProd(){ const el=document.getElementById("pp-total"); const v=el&&el.textContent!=="—"?parseInt(el.textContent)||0:0; return v; }
 
 // ================================================================
 // RESUMEN
@@ -1106,6 +1118,7 @@ async function submitAuditoria(){
   alertEl.textContent=`✓ ${id} registrada${res.ok?" y enviada a Sheets":" (guardada local — error Sheets)"}.`;
   setTimeout(()=>alertEl.classList.add("hidden"),6000);
   resetForm(); btn.disabled=false; btn.textContent="✓ Registrar y enviar a Sheets";
+  populateSelects(); renderDashboard();
 }
 
 function resetForm(){
@@ -1116,9 +1129,12 @@ function resetForm(){
   document.querySelectorAll(".criteria-score").forEach(el=>{ el.textContent="—"; el.style.color="var(--hint)"; });
   document.getElementById("horas-preview").innerHTML='<span style="color:var(--hint)">Ingresá las horas para ver el objetivo</span>';
   document.getElementById("semana-count-alert").classList.add("hidden");
-  goStep(1);
+  // Reset tabs: clear all done/active, restore tab-1
   document.querySelectorAll(".step-tab").forEach(t=>t.classList.remove("done","active"));
   document.getElementById("tab-1").classList.add("active");
+  // Show step-1 directly without triggering renderCriterios
+  document.querySelectorAll(".form-step").forEach(s=>s.classList.remove("active"));
+  document.getElementById("step-1").classList.add("active");
   document.getElementById("f-fecha").value=new Date().toISOString().slice(0,10);
   const meses=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
   document.getElementById("f-mes").value=meses[new Date().getMonth()];
@@ -1170,7 +1186,8 @@ function renderDashboard(){
 function renderCharts(agL,agD,evoL,evoD,est){
   ["A","E","S"].forEach(k=>{ if(_charts[k]){ _charts[k].destroy(); delete _charts[k]; }});
   const U=getUMB();
-  _charts.A=new Chart(document.getElementById("chart-agentes"),{type:"bar",data:{labels:agL,datasets:[{data:agD,backgroundColor:agD.map(pct=>pct>=U.excelente?"#15803D":pct>=U.correcta?"#1D4ED8":"#DC2626"),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:pct=>pct+"%"},grid:{color:"rgba(0,0,0,.04)"}},x:{grid:{display:false},ticks:{font:{size:11}}}}}});
+  const canvA=document.getElementById("chart-agentes"); if(!canvA) return;
+  _charts.A=new Chart(canvA,{type:"bar",data:{labels:agL,datasets:[{data:agD,backgroundColor:agD.map(pct=>pct>=U.excelente?"#15803D":pct>=U.correcta?"#1D4ED8":"#DC2626"),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:pct=>pct+"%"},grid:{color:"rgba(0,0,0,.04)"}},x:{grid:{display:false},ticks:{font:{size:11}}}}}});
   _charts.E=new Chart(document.getElementById("chart-evolucion"),{type:"line",data:{labels:evoL,datasets:[{data:evoD,borderColor:"#1D4ED8",backgroundColor:"rgba(29,78,216,.07)",tension:0.4,fill:true,pointRadius:4,pointBackgroundColor:"#1D4ED8"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:pct=>pct+"%"},grid:{color:"rgba(0,0,0,.04)"}},x:{display:false}}}});
   _charts.S=new Chart(document.getElementById("chart-estados"),{type:"doughnut",data:{labels:["Excelente","Correcta","Observada"],datasets:[{data:[est.Excelente,est.Correcta,est.Observada],backgroundColor:["#15803D","#1D4ED8","#DC2626"],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11},usePointStyle:true,pointStyle:"rect"}}}}});
 }
@@ -1275,8 +1292,7 @@ function renderAgentes(){
       <div style="font-size:13px;font-family:'DM Mono',monospace;font-weight:700;color:${col};min-width:38px;text-align:right">${a.gen}%</div>
     </div>`;
   }).join("");
-  const sel=document.getElementById("sel-agente-detail");
-  if(sel) sel.innerHTML='<option value="">— Seleccionar agente —</option>'+sorted.map(a=>`<option>${a.ag}</option>`).join("");
+
 }
 
 function renderAgentDetail(){
@@ -1505,10 +1521,15 @@ function exportCSV(){
   const h=["id_auditoria","fecha_auditoria","auditor","agente","ticket","canal","tipo","mes","semana","horas_trabajadas","objetivo_interacciones","interacciones_reales","dias_tarde","dias_faltas","calidad","productividad","general","estado","requiere_seguimiento","obs_general","obs_accion","sheets_enviado"];
   const rows=DB.auditorias.map(a=>h.map(k=>{ const val=a[k]??""; return typeof val==="string"&&val.includes(",")?"\""+val.replace(/"/g,"'")+"\"":(String(val).includes(",")?"\""+val+"\"":val); }));
   const csv=[h,...rows].map(r=>r.join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
   const link=document.createElement("a");
-  link.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
+  link.href=url;
   link.download="auditoria_cs_"+new Date().toISOString().slice(0,10)+".csv";
+  document.body.appendChild(link);
   link.click();
+  document.body.removeChild(link);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 // ================================================================
